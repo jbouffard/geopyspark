@@ -1,3 +1,5 @@
+import Dependencies._
+
 name := "geotrellis-backend"
 
 resolvers ++= Seq(
@@ -6,16 +8,6 @@ resolvers ++= Seq(
 )
 
 libraryDependencies ++= Seq(
-  "org.apache.spark"            %% "spark-core"       % "1.2.2" % "provided",
-  "org.locationtech.geotrellis" %% "geotrellis-spark" % Version.geotrellis
+  sparkCore % "provided",
+  geotrellis
 )
-
-assemblyMergeStrategy in assembly := {
-  case "referejce.conf" => MergeStrategy.concat
-  case "application.conf" => MergeStrategy.concat
-  case "META-INF/MANIFEST.MF" => MergeStrategy.discard
-  case "META-INF\\MANIFEST.MF" => MergeStrategy.discard
-  case "META-INF/ECLIPSEF.RSA" => MergeStrategy.discard
-  case "META-INF/ECLIPSEF.SF" => MergeStrategy.discard
-  case _ => MergeStrategy.first
-}
