@@ -20,10 +20,21 @@ lazy val commonSettings = Seq(
 )
 
 lazy val root = Project("root", file(".")).
-  dependsOn(geotrellisProject)
+  aggregate(geotrellisProject,
+    geotrellisTestkit,
+    geotrellisTest).
+  settings(commonSettings: _*)
 
 lazy val geotrellisProject = Project("geotrellis-backend", file("geotrellis")).
   settings(commonSettings: _*)
+
+lazy val geotrellisTestkit = Project("geotrellis-testkit", file("geotrellis-testkit")).
+  dependsOn(geotrellisProject).
+  settings(commonSettings: _*)
+
+lazy val geotrellisTest = Project("geotrellis-test", file("geotrellis-test")).
+  dependsOn(geotrellisProject, geotrellisTestkit).
+  settings(commonSettings:_*)
 
 /*
 lazy val core = Project("core", file("core")).
