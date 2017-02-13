@@ -12,7 +12,7 @@ class GeoTiffRDD:
         else:
             ser = AvroSerializer(schema, avroregistry)
 
-        return RDD(java_rdd, self.pysc, AutoBatchedSerializer(ser))
+        return (RDD(java_rdd, self.pysc, AutoBatchedSerializer(ser)), schema)
 
 
 class HadoopGeoTiffRDD(GeoTiffRDD):
