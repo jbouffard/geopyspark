@@ -26,37 +26,25 @@ import scala.reflect.ClassTag
 
 
 object TilerMethodsWrapper {
-  private def _cutTiles[
+  private def getMetadata[
   K: GetComponent[?, ProjectedExtent]: (? => TilerKeyMethods[K, K2]): AvroRecordCodec: ClassTag,
-  V <: CellGrid: AvroRecordCodec: ClassTag: (? => TileMergeMethods[V]): (? => TilePrototypeMethods[V]),
-  K2: Boundable: SpatialComponent: ClassTag: AvroRecordCodec
+  V <: CellGrid: AvroRecordCodec: ClassTag,
+  K2: Boundable: SpatialComponent
   ](
     returnedRdd: RDD[Array[Byte]],
     schema: String,
     pythonTileDefinition: java.util.List[java.util.Map[String, _]],
-    pythonCRS: String,
-    resampleMap: java.util.Map[String, String]
-  ): (JavaRDD[Array[Byte]], String) = {
+    pythonCRS: String
+  ): (RDD[(K, V)], TileLayerMetadata[K2]) = {
     val rdd: RDD[(K, V)] = PythonTranslator.fromPython[(K, V)](returnedRdd, Some(schema))
     val layoutDefinition: LayoutDefinition = pythonTileDefinition.toLayoutDefinition
     val crs: CRS = CRS.fromString(pythonCRS)
 
-    val metadata = rdd.collectMetadata[K2](crs, layoutDefinition)
-
-    val scalaMap = resampleMap.asScala
-
-    val cutRdd =
-      if (scalaMap.isEmpty)
-        rdd.cutTiles(metadata)
-      else {
-        val resampleMethod = TilerOptions
-          .getResampleMethod(scalaMap.get("resampleMethod"))
-
-        rdd.cutTiles(metadata, resampleMethod)
-      }
-
-    PythonTranslator.toPython[(K2, V)](cutRdd)
+    (rdd, rdd.collectMetadata[K2](crs, layoutDefinition))
   }
+
+  // TODO: Refactor this code so that the tileToLayout is performed via the
+  // cutTiles method.
 
   def cutTiles(
     keyType: String,
@@ -66,35 +54,127 @@ object TilerMethodsWrapper {
     pythonTileDefinition: java.util.List[java.util.Map[String, _]],
     pythonCRS: String,
     resampleMap: java.util.Map[String, String]
-  ): (JavaRDD[Array[Byte]], String) =
+  ): (JavaRDD[Array[Byte]], String) = {
+    val resampleMethod =
+      if (resampleMap.isEmpty)
+        TilerOptions.default.resampleMethod
+      else
+        TilerOptions.getResampleMethod(Some(resampleMap("resampleMethod")))
+
     (keyType, valueType) match {
       case ("spatial", "singleband") =>
-        _cutTiles[ProjectedExtent, Tile, SpatialKey](
-          returnedRdd,
-          schema,
-          pythonTileDefinition,
-          pythonCRS,
-          resampleMap)
+        val (rdd, metadata) =
+          getMetadata[ProjectedExtent, Tile, SpatialKey](
+            returnedRdd,
+            schema,
+            pythonTileDefinition,
+            pythonCRS)
+
+        val result = rdd.cutTiles(metadata, resampleMethod)
+
+        PythonTranslator.toPython(result)
+
       case ("spatial", "multiband") =>
-        _cutTiles[ProjectedExtent, MultibandTile, SpatialKey](
-          returnedRdd,
-          schema,
-          pythonTileDefinition,
-          pythonCRS,
-          resampleMap)
+        val (rdd, metadata) =
+          getMetadata[ProjectedExtent, MultibandTile, SpatialKey](
+            returnedRdd,
+            schema,
+            pythonTileDefinition,
+            pythonCRS)
+
+        val result = rdd.cutTiles(metadata, resampleMethod)
+
+        PythonTranslator.toPython(result)
+
       case ("spacetime", "singleband") =>
-        _cutTiles[TemporalProjectedExtent, Tile, SpaceTimeKey](
-          returnedRdd,
-          schema,
-          pythonTileDefinition,
-          pythonCRS,
-          resampleMap)
+        val (rdd, metadata) =
+          getMetadata[TemporalProjectedExtent, Tile, SpaceTimeKey](
+            returnedRdd,
+            schema,
+            pythonTileDefinition,
+            pythonCRS)
+
+        val result = rdd.cutTiles(metadata, resampleMethod)
+
+        PythonTranslator.toPython(result)
+
       case ("spacetime", "multiband") =>
-        _cutTiles[TemporalProjectedExtent, MultibandTile, SpaceTimeKey](
-          returnedRdd,
-          schema,
-          pythonTileDefinition,
-          pythonCRS,
-          resampleMap)
+        val (rdd, metadata) =
+          getMetadata[TemporalProjectedExtent, MultibandTile, SpaceTimeKey](
+            returnedRdd,
+            schema,
+            pythonTileDefinition,
+            pythonCRS)
+
+        val result = rdd.cutTiles(metadata, resampleMethod)
+
+        PythonTranslator.toPython(result)
     }
+  }
+
+  def tileToLayout(
+    keyType: String,
+    valueType: String,
+    returnedRdd: RDD[Array[Byte]],
+    schema: String,
+    pythonTileDefinition: java.util.List[java.util.Map[String, _]],
+    pythonCRS: String,
+    options: java.util.Map[String, Any]
+  ): (JavaRDD[Array[Byte]], String) = {
+    val returnedOptions =
+      if (options.isEmpty)
+        TilerOptions.default
+      else
+        TilerOptions.setValues(options)
+
+    (keyType, valueType) match {
+      case ("spatial", "singleband") =>
+        val (rdd, metadata) =
+          getMetadata[ProjectedExtent, Tile, SpatialKey](
+            returnedRdd,
+            schema,
+            pythonTileDefinition,
+            pythonCRS)
+
+        val result = rdd.tileToLayout(metadata, returnedOptions)
+
+        PythonTranslator.toPython(result)
+
+      case ("spatial", "multiband") =>
+        val (rdd, metadata) =
+          getMetadata[ProjectedExtent, MultibandTile, SpatialKey](
+            returnedRdd,
+            schema,
+            pythonTileDefinition,
+            pythonCRS)
+
+        val result = rdd.tileToLayout(metadata, returnedOptions)
+
+        PythonTranslator.toPython(result)
+
+      case ("spacetime", "singleband") =>
+        val (rdd, metadata) =
+          getMetadata[TemporalProjectedExtent, Tile, SpaceTimeKey](
+            returnedRdd,
+            schema,
+            pythonTileDefinition,
+            pythonCRS)
+
+        val result = rdd.tileToLayout(metadata, returnedOptions)
+
+        PythonTranslator.toPython(result)
+
+      case ("spacetime", "multiband") =>
+        val (rdd, metadata) =
+          getMetadata[TemporalProjectedExtent, MultibandTile, SpaceTimeKey](
+            returnedRdd,
+            schema,
+            pythonTileDefinition,
+            pythonCRS)
+
+        val result = rdd.tileToLayout(metadata, returnedOptions)
+
+        PythonTranslator.toPython(result)
+    }
+  }
 }
