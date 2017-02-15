@@ -39,6 +39,17 @@ class TileLayerMethods(metaclass=SingletonBase):
 
         return (key_type, value_type)
 
+    @classmethod
+    def _get_tiling_parameters(cls, schema, resample_method):
+        types = cls._get_key_value_types(schema)
+
+        if resample_method is None:
+            resample_dict = {}
+        else:
+            resample_dict = {"resampleMethod": resample_method}
+
+        return (types, resample_dict)
+
     def _convert_to_java_rdd(self, rdd, schema):
         ser = AvroSerializer(schema, self.avroregistry)
         dumped = rdd.map(lambda value: ser.dumps(value, schema))
@@ -87,20 +98,34 @@ class TileLayerMethods(metaclass=SingletonBase):
                   tile_layer_metadata,
                   resample_method=None):
 
-        types = self._get_key_value_types(schema)
         java_rdd = self._convert_to_java_rdd(rdd, schema)
+        params = self._get_tiling_parameters(schema, resample_method)
 
-        if resample_method is None:
-            resample_dict = {}
-        else:
-            resample_dict = {"resampleMethod": resample_method}
-
-        result = self._tiler_wrapper.cutTiles(types[0],
-                                              types[1],
+        result = self._tiler_wrapper.cutTiles(params[0][0],
+                                              params[0][1],
                                               java_rdd.rdd(),
                                               schema,
                                               tile_layer_metadata['layout'],
                                               tile_layer_metadata['crs'],
-                                              resample_dict)
+                                              params[1])
+
+        return decode_java_rdd(self.pysc, result._1(), result._2(), self.avroregistry)
+
+    def tile_to_layout(self,
+                  rdd,
+                  schema,
+                  tile_layer_metadata,
+                  resample_method=None):
+
+        java_rdd = self._convert_to_java_rdd(rdd, schema)
+        params = self._get_tiling_parameters(schema, resample_method)
+
+        result = self._tiler_wrapper.tileToLayout(params[0][0],
+                                              params[0][1],
+                                              java_rdd.rdd(),
+                                              schema,
+                                              tile_layer_metadata['layout'],
+                                              tile_layer_metadata['crs'],
+                                              params[1])
 
         return decode_java_rdd(self.pysc, result._1(), result._2(), self.avroregistry)
