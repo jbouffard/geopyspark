@@ -1,6 +1,7 @@
 from py4j.java_gateway import java_import
 from geopyspark.avroserializer import AvroSerializer
 from geopyspark.singleton_base import SingletonBase
+from geopyspark.geotrellis import decode_java_rdd
 
 import json
 
@@ -10,14 +11,14 @@ class TileLayerMethods(metaclass=SingletonBase):
         self.pysc = pysc
         self.avroregistry = avroregistry
 
-        _tiler_path = "geopyspark.geotrellis.spark.tiling.TileWrapper"
+        _tiler_path = "geopyspark.geotrellis.spark.tiling.TilerMethodsWrapper"
         _metadata_path = "geopyspark.geotrellis.spark.TileLayerMetadataCollector"
 
         java_import(self.pysc._gateway.jvm, _tiler_path)
         java_import(self.pysc._gateway.jvm, _metadata_path)
 
         self._metadata_wrapper = self.pysc._gateway.jvm.TileLayerMetadataCollector
-        self._tiler_wrapper = self.pysc._gateway.jvm.TilerMethods
+        self._tiler_wrapper = self.pysc._gateway.jvm.TilerMethodsWrapper
 
     @staticmethod
     def _format_strings(proj_params, epsg_code, wkt_string):
@@ -97,9 +98,12 @@ class TileLayerMethods(metaclass=SingletonBase):
         else:
             resample_dict = {"resampleMethod": resample_method}
 
-        return self._tiler_wrapper.cutTiles(types[0],
-                                            types[1],
-                                            java_rdd.rdd(),
-                                            schema,
-                                            tile_layer_metadata,
-                                            resample_dict)
+        result = self._tiler_wrapper.cutTiles(types[0],
+                                              types[1],
+                                              java_rdd.rdd(),
+                                              schema,
+                                              tile_layer_metadata['layout'],
+                                              tile_layer_metadata['crs'],
+                                              resample_dict)
+
+        return decode_java_rdd(self.pysc, result._1(), result._2(), self.avroregistry)
