@@ -21,24 +21,6 @@ class TileLayerMethods(metaclass=SingletonBase):
         self._tiler_wrapper = self.pysc._gateway.jvm.TilerMethodsWrapper
 
     @staticmethod
-    def _format_strings(proj_params, epsg_code, wkt_string):
-
-        if proj_params:
-            return {"projParams": proj_params}
-
-        elif epsg_code:
-            if isinstance(epsg_code, int):
-                epsg_code = str(epsg_code)
-
-            return {"epsg": epsg_code}
-
-        elif wkt_string:
-            return {"wktString": wkt_string}
-
-        else:
-            return {}
-
-    @staticmethod
     def _get_key_value_types(schema):
         schema_json = json.loads(schema)
 
@@ -73,7 +55,22 @@ class TileLayerMethods(metaclass=SingletonBase):
                          wkt_string=None):
 
         types = self._get_key_value_types(schema)
-        result = self._format_strings(proj_params, epsg_code, wkt_string)
+
+        if proj_params:
+            crs = {"projParams": proj_params}
+
+        elif epsg_code:
+            if isinstance(epsg_code, int):
+                epsg_code = str(epsg_code)
+
+            crs = {"epsg": epsg_code}
+
+        elif wkt_string:
+            crs = {"wktString": wkt_string}
+
+        else:
+            return {}
+
         java_rdd = self._convert_to_java_rdd(rdd, schema)
 
         return self._metadata_wrapper.collectPythonMetadata(types[0],
@@ -82,7 +79,7 @@ class TileLayerMethods(metaclass=SingletonBase):
                                                             schema,
                                                             extent,
                                                             tile_layout,
-                                                            result)
+                                                            crs)
 
     def cut_tiles(self,
                   rdd,
