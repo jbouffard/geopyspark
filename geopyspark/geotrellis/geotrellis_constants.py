@@ -1,0 +1,2 @@
+SPATIAL = 'spatial'
+SPACETIME = 'spacetime'
