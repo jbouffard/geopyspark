@@ -100,7 +100,8 @@ class Multiband(GeoTiffIOTest, BaseTestClass):
         else:
             result = self.hadoop_geotiff.get_rdd(SPATIAL,
                                                  "multiband",
-                                                 self.dir_path, options)
+                                                 self.dir_path,
+                                                 options)
 
         return [tile[1] for tile in result.collect()]
 
