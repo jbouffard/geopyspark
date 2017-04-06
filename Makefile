@@ -1,34 +1,43 @@
 export PYTHON := python3
 export PYSPARK_PYTHON := ipython
-export IMG := jupyter-geopyspark
 
-ASSEMBLY := geopyspark-backend/geotrellis/target/scala-2.11/geotrellis-backend-assembly-0.1.0.jar
-WHEEL := dist/geopyspark-0.1.0-py3-none-any.whl
-JAR-PATH := geopyspark/jars/
+JAR-PATH := geopyspark/jars
+ASSEMBLYNAME := geotrellis-backend-assembly-0.1.0.jar
+BUILD-ASSEMBLY := geopyspark-backend/geotrellis/target/scala-2.11/${ASSEMBLYNAME}
+DIST-ASSEMBLY := ${JAR-PATH}/${ASSEMBLYNAME}
+WHEELNAME := geopyspark-0.1.0-py3-none-any.whl
+WHEEL := dist/${WHEELNAME}
 rwildcard=$(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2) $(filter $(subst *,%,$2),$d))
 
-install: ${ASSEMBLY} ${JAR-PATH}
+install: ${DIST-ASSEMBLY} ${WHEEL}
 	${PYTHON} setup.py install --user --force --prefix=
 
-${ASSEMBLY}: $(call rwildcard, geopyspark-backend/src, *.scala) geopyspark-backend/build.sbt
-	(cd geopyspark-backend && ./sbt "project geotrellis-backend" assembly)
+${DIST-ASSEMBLY}: ${BUILD-ASSEMBLY}
+	cp -f ${BUILD-ASSEMBLY} ${DIST-ASSEMBLY}
 
-${JAR-PATH}: $(call rwildcard, geopyspark-backend/, *.jar) $(ASSEMBLY)
-	cp $(ASSEMBLY) $(JAR-PATH)
+${BUILD-ASSEMBLY}: $(call rwildcard, geopyspark-backend/, *.jar)
+	(cd geopyspark-backend && ./sbt "project geotrellis-backend" assembly)
 
 ${WHEEL}: $(call rwildcard, geopyspark, *.py) setup.py
 	${PYTHON} setup.py bdist_wheel
 
-wheel: ${ASSEMBLY} ${JAR-PATH} ${WHEEL}
+pyspark: ${DIST-ASSEMBLY}
+	pyspark --jars ${DIST-ASSEMBLY}
 
-pyspark:
-	pyspark --jars ${ASSEMBLY}
+docker/archives/${ASSEMBLYNAME}: ${DIST-ASSEMBLY}
+	cp -f ${DIST-ASSEMBLY} docker/archives/${ASSEMBLYNAME}
 
-docker-build: ${WHEEL}
-	docker build -t ${IMG}:latest .
+docker/archives/${WHEELNAME}: ${WHEEL}
+	cp -f ${WHEEL} docker/archives/${WHEELNAME}
 
-docker-run:
-	docker run --rm --name geopyspark  -it -p 8000:8000 -v $(CURDIR)/notebooks:/opt/notebooks ${IMG}:latest ${CMD}
+docker-build: docker/archives/${ASSEMBLYNAME} docker/archives/${WHEELNAME}
+	(cd docker && make stage1)
 
-docker-exec:
-	docker exec -it -u root geopyspark bash
+clean:
+	(cd geopyspark-backend && ./sbt "project geotrellis-backend" clean)
+	rm -f ${WHEEL} ${DIST-ASSEMBLY}
+
+cleaner: clean
+	rm -f `find ./build ./geopyspark | grep "\.pyc"`
+
+cleanest: cleaner
