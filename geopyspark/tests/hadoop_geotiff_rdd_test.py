@@ -2,10 +2,10 @@ import unittest
 from os import walk, path
 import rasterio
 
-from geopyspark.tests.python_test_utils import check_directory, geotiff_test_path
-from geopyspark.geotrellis.geotiff_rdd import geotiff_rdd
-from geopyspark.tests.base_test_class import BaseTestClass
 from geopyspark.geotrellis.constants import SPATIAL
+from geopyspark.tests.python_test_utils import check_directory, geotiff_test_path
+from geopyspark.geotrellis.geotiff_rdd import get
+from geopyspark.tests.base_test_class import BaseTestClass
 
 
 check_directory()
@@ -47,16 +47,16 @@ class Singleband(GeoTiffIOTest, BaseTestClass):
 
     def read_singleband_geotrellis(self, options=None):
         if options is None:
-            result = geotiff_rdd(BaseTestClass.geopysc,
-                                 SPATIAL,
-                                 self.dir_path)
+            result = get(BaseTestClass.geopysc,
+                         SPATIAL,
+                         self.dir_path)
         else:
-            result = geotiff_rdd(BaseTestClass.geopysc,
-                                 SPATIAL,
-                                 self.dir_path,
-                                 maxTileSize=256)
+            result = get(BaseTestClass.geopysc,
+                         SPATIAL,
+                         self.dir_path,
+                         maxTileSize=256)
 
-        return [tile[1] for tile in result.collect()]
+        return [tile[1] for tile in result.to_numpy_rdd().collect()]
 
     def test_whole_tiles(self):
         geotrellis_tiles = self.read_singleband_geotrellis()
@@ -90,16 +90,16 @@ class Multiband(GeoTiffIOTest, BaseTestClass):
 
     def read_multiband_geotrellis(self, options=None):
         if options is None:
-            result = geotiff_rdd(BaseTestClass.geopysc,
-                                 SPATIAL,
-                                 self.dir_path)
+            result = get(BaseTestClass.geopysc,
+                         SPATIAL,
+                         self.dir_path)
         else:
-            result = geotiff_rdd(BaseTestClass.geopysc,
-                                 SPATIAL,
-                                 self.dir_path,
-                                 options)
+            result = get(BaseTestClass.geopysc,
+                         SPATIAL,
+                         self.dir_path,
+                         options)
 
-        return [tile[1] for tile in result.collect()]
+        return [tile[1] for tile in result.to_numpy_rdd().collect()]
 
     def test_whole_tiles(self):
         geotrellis_tiles = self.read_multiband_geotrellis()

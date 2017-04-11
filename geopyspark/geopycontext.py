@@ -26,30 +26,6 @@ class GeoPyContext(object):
         return self._jvm.geopyspark.geotrellis.SchemaProducer
 
     @property
-    def _hadoop_geotiff_rdd(self):
-        return self._jvm.geopyspark.geotrellis.io.hadoop.HadoopGeoTiffRDDWrapper
-
-    @property
-    def _s3_geotiff_rdd(self):
-        return self._jvm.geopyspark.geotrellis.io.s3.S3GeoTiffRDDWrapper
-
-    @property
-    def _store_factory(self):
-        return self._jvm.geopyspark.geotrellis.io.AttributeStoreFactory
-
-    @property
-    def _reader_factory(self):
-        return self._jvm.geopyspark.geotrellis.io.LayerReaderFactory
-
-    @property
-    def _value_reader_factory(self):
-        return self._jvm.geopyspark.geotrellis.io.ValueReaderFactory
-
-    @property
-    def _writer_factory(self):
-        return self._jvm.geopyspark.geotrellis.io.LayerWriterFactory
-
-    @property
     def _tile_layer_metadata_collecter(self):
         return self._jvm.geopyspark.geotrellis.spark.TileLayerMetadataCollector
 
@@ -80,6 +56,14 @@ class GeoPyContext(object):
     @property
     def rdd_costdistance(self):
         return self._jvm.geopyspark.geotrellis.spark.costdistance.CostDistanceWrapper
+
+    @property
+    def _projected_raster_rdd(self):
+        return self._jvm.geopyspark.geotrellis.ProjectedRasterRDD
+
+    @property
+    def _temporal_raster_rdd(self):
+        return self._jvm.geopyspark.geotrellis.TemporalRasterRDD
 
     @staticmethod
     def map_key_input(key_type, is_boundable):
