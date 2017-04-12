@@ -1,7 +1,13 @@
 import json
+import shapely.wkt
 
-from geopyspark.geotrellis.constants import RESAMPLE_METHODS, NEARESTNEIGHBOR, FLOAT, TILE
-
+from geopyspark.geotrellis.constants import (RESAMPLE_METHODS,
+                                             OPERATIONS,
+                                             NEIGHBORHOODS,
+                                             NEARESTNEIGHBOR,
+                                             FLOAT,
+                                             TILE
+                                            )
 
 class RasterRDD(object):
     """Holds an RDD of GeoTrellis rasters"""
@@ -89,6 +95,25 @@ class TiledRasterRDD(object):
     def zoom_level(self):
         zoom = self.srdd.getZoom()
 
+    @classmethod
+    def from_numpy_rdd(cls, geopysc, rdd_type, numpy_rdd, metadata):
+        key = geopysc.map_key_input(rdd_type, True)
+
+        schema = geopysc.create_schema(key)
+        ser = geopysc.create_tuple_serializer(schema, key_type=None, value_type=TILE)
+        reserialized_rdd = numpy_rdd._reserialize(ser)
+
+        if key == "SpatialKey":
+            srdd = \
+                    geopysc._jvm.geopyspark.geotrellis.SpatialTiledRasterRDD.fromAvroEncodedRDD(
+                        reserialized_rdd._jrdd, schema, json.dumps(metadata))
+        else:
+            srdd = \
+                    geopysc._jvm.geopyspark.geotrellis.TemporalTiledRasterRDD.fromAvroEncodedRDD(
+                        reserialized_rdd._jrdd, schema, json.dumps(metadata))
+
+        return cls(geopysc, key, srdd)
+
     def to_numpy_rdd(self):
         result = self.srdd.toAvroRDD()
         ser = self.geopysc.create_tuple_serializer(result._2(), value_type="Tile")
@@ -126,5 +151,31 @@ class TiledRasterRDD(object):
 
         return [TiledRasterRDD(self.geopysc, self.rdd_type, srdd) for srdd in result]
 
-    def focal(self):
-        pass
+    def focal(self, operation, neighborhood, param_1=None, param_2=None, param_3=None):
+        assert(operation in OPERATIONS)
+        assert(neighborhood in NEIGHBORHOODS)
+
+        if param_1 is None:
+            param_1 = 0.0
+        if param_2 is None:
+            param_2 = 0.0
+        if param_3 is None:
+            param_3 = 0.0
+
+        srdd = self.srdd.focal(operation, neighborhood, param_1, param_2, param_3)
+
+        return TiledRasterRDD(self.geopysc, self.rdd_type, srdd)
+
+    def stitch(self):
+        assert(self.rdd_type == "SpatialKey",
+               "Only TiledRasterRDDs with a rdd_type of SpatialKey can use stitch()")
+
+        tup = self.srdd.stitch()
+        ser = self.geopysc.create_value_serializer(tup._2(), TILE)
+        return ser.loads(tup._1())[0]
+
+    def cost_distance(self, geometries, max_distance):
+        wkts = [shapely.wkt.dumps(g) for g in geometries]
+        srdd = self.srdd.costDistance(self.geopysc.sc, wkts, max_distance)
+
+        return TiledRasterRDD(self.geopysc, self.rdd_type, srdd)

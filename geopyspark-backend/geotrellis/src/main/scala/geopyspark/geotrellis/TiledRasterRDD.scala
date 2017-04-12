@@ -6,22 +6,26 @@ import geotrellis.util._
 import geotrellis.proj4._
 import geotrellis.vector._
 import geotrellis.vector.io._
+import geotrellis.vector.io.wkt.WKT
 import geotrellis.raster._
 import geotrellis.raster.io._
 import geotrellis.raster.merge._
 import geotrellis.raster.prototype._
-import geotrellis.raster.resample._
+import geotrellis.raster.resample.ResampleMethod
 import geotrellis.spark._
 import geotrellis.spark.pyramid._
 import geotrellis.spark.reproject._
+import geotrellis.spark.costdistance.IterativeCostDistance
 import geotrellis.spark.io._
 import geotrellis.spark.io.json._
 import geotrellis.spark.io.avro._
+import geotrellis.spark.mapalgebra.focal._
 import geotrellis.spark.tiling._
 
 import spray.json._
 import spray.json.DefaultJsonProtocol._
 
+import org.apache.spark._
 import org.apache.spark.rdd._
 import org.apache.spark.api.java.JavaRDD
 
@@ -95,6 +99,29 @@ abstract class TiledRasterRDD[K: SpatialComponent: AvroRecordCodec: JsonFormat: 
     resampleMethod: String
   ): Array[_] // Array[TiledRasterRDD[_]]
 
+  def focal(
+    operation: String,
+    neighborhood: String,
+    param1: Double,
+    param2: Double,
+    param3: Double
+  ): TiledRasterRDD[_]
+
+  def costDistance(
+    sc: SparkContext,
+    wkts: java.util.ArrayList[String],
+    maxDistance: Double
+  ): TiledRasterRDD[_] = {
+    val geometries = wkts.asScala.map({ wkt => WKT.read(wkt) })
+
+    costDistance(sc, geometries, maxDistance)
+  }
+
+  protected def costDistance(
+    sc: SparkContext,
+    geometries: Seq[Geometry],
+    maxDistance: Double
+  ): TiledRasterRDD[_]
 }
 
 
@@ -165,6 +192,63 @@ class SpatialTiledRasterRDD(
       )
 
     leveledList.map{ x => new SpatialTiledRasterRDD(Some(x._1), x._2) }.toArray
+  }
+
+  def focal(
+    operation: String,
+    neighborhood: String,
+    param1: Double,
+    param2: Double,
+    param3: Double
+  ): TiledRasterRDD[SpatialKey] = {
+    val singleTileLayerRDD: TileLayerRDD[SpatialKey] = TileLayerRDD(
+      rdd.map({ case (k, v) => (k, v.band(0)) }),
+      rdd.metadata
+    )
+
+    val _neighborhood = getNeighborhood(operation, neighborhood, param1, param2, param3)
+    val cellSize = rdd.metadata.layout.cellSize
+    val op: ((Tile, Option[GridBounds]) => Tile) = getOperation(operation, _neighborhood, cellSize, param1)
+
+    val result: TileLayerRDD[SpatialKey] = FocalOperation(singleTileLayerRDD, _neighborhood)(op)
+
+    val multibandRDD: MultibandTileLayerRDD[SpatialKey] =
+      MultibandTileLayerRDD(result.map{ x => (x._1, MultibandTile(x._2)) }, result.metadata)
+
+    new SpatialTiledRasterRDD(None, multibandRDD)
+  }
+
+  def stitch: (Array[Byte], String) = {
+    val contextRDD = ContextRDD(
+      rdd.map({ case (k, v) => (k, v.band(0)) }),
+      rdd.metadata
+    )
+
+    PythonTranslator.toPython(contextRDD.stitch.tile)
+  }
+
+  def costDistance(
+    sc: SparkContext,
+    geometries: Seq[Geometry],
+    maxDistance: Double
+  ): TiledRasterRDD[SpatialKey] = {
+    val singleTileLayer = TileLayerRDD(
+      rdd.map({ case (k, v) => (k, v.band(0)) }),
+      rdd.metadata
+    )
+
+    implicit def convertion(k: SpaceTimeKey): SpatialKey =
+      k.spatialKey
+
+    implicit val _sc = sc
+
+    val result: TileLayerRDD[SpatialKey] =
+      IterativeCostDistance(singleTileLayer, geometries, maxDistance)
+
+    val multibandRDD: MultibandTileLayerRDD[SpatialKey] =
+      MultibandTileLayerRDD(result.map{ x => (x._1, MultibandTile(x._2)) }, result.metadata)
+
+    new SpatialTiledRasterRDD(None, multibandRDD)
   }
 }
 
@@ -246,4 +330,95 @@ class TemporalTiledRasterRDD(
 
     leveledList.map{ x => new TemporalTiledRasterRDD(Some(x._1), x._2) }.toArray
   }
+
+  def focal(
+    operation: String,
+    neighborhood: String,
+    param1: Double,
+    param2: Double,
+    param3: Double
+  ): TiledRasterRDD[SpaceTimeKey] = {
+    val singleTileLayerRDD: TileLayerRDD[SpaceTimeKey] = TileLayerRDD(
+      rdd.map({ case (k, v) => (k, v.band(0)) }),
+      rdd.metadata
+    )
+
+    val _neighborhood = getNeighborhood(operation, neighborhood, param1, param2, param3)
+    val cellSize = rdd.metadata.layout.cellSize
+    val op: ((Tile, Option[GridBounds]) => Tile) = getOperation(operation, _neighborhood, cellSize, param1)
+
+    val result: TileLayerRDD[SpaceTimeKey] = FocalOperation(singleTileLayerRDD, _neighborhood)(op)
+
+    val multibandRDD: MultibandTileLayerRDD[SpaceTimeKey] =
+      MultibandTileLayerRDD(result.map{ x => (x._1, MultibandTile(x._2)) }, result.metadata)
+
+    new TemporalTiledRasterRDD(None, multibandRDD)
+  }
+
+  def costDistance(
+    sc: SparkContext,
+    geometries: Seq[Geometry],
+    maxDistance: Double
+  ): TiledRasterRDD[SpaceTimeKey] = {
+    val singleTileLayer = TileLayerRDD(
+      rdd.map({ case (k, v) => (k, v.band(0)) }),
+      rdd.metadata
+    )
+
+    implicit def convertion(k: SpaceTimeKey): SpatialKey =
+      k.spatialKey
+
+    implicit val _sc = sc
+
+    val result: TileLayerRDD[SpaceTimeKey] =
+      IterativeCostDistance(singleTileLayer, geometries, maxDistance)
+
+    val multibandRDD: MultibandTileLayerRDD[SpaceTimeKey] =
+      MultibandTileLayerRDD(result.map{ x => (x._1, MultibandTile(x._2)) }, result.metadata)
+
+    new TemporalTiledRasterRDD(None, multibandRDD)
+  }
+}
+
+
+object SpatialTiledRasterRDD {
+  def fromAvroEncodedRDD(
+    javaRDD: JavaRDD[Array[Byte]],
+    schema: String,
+    metadata: String
+  ): SpatialTiledRasterRDD = {
+    val md = metadata.parseJson.convertTo[TileLayerMetadata[SpatialKey]]
+    val tileLayer = MultibandTileLayerRDD(
+      PythonTranslator.fromPython[(SpatialKey, MultibandTile)](javaRDD, Some(schema)),
+      md)
+
+    SpatialTiledRasterRDD(None, tileLayer)
+  }
+
+  def apply(
+    zoomLevel: Option[Int],
+    rdd: RDD[(SpatialKey, MultibandTile)] with Metadata[TileLayerMetadata[SpatialKey]]
+  ): SpatialTiledRasterRDD =
+    new SpatialTiledRasterRDD(zoomLevel, rdd)
+}
+
+object TemporalTiledRasterRDD {
+  def fromAvroEncodedRDD(
+    javaRDD: JavaRDD[Array[Byte]],
+    schema: String,
+    metadata: String
+  ): TemporalTiledRasterRDD = {
+    val md = metadata.parseJson.convertTo[TileLayerMetadata[SpaceTimeKey]]
+    val tileLayer = MultibandTileLayerRDD(
+      PythonTranslator.fromPython[(SpaceTimeKey, MultibandTile)](javaRDD, Some(schema)),
+      md)
+
+    TemporalTiledRasterRDD(None, tileLayer)
+  }
+
+  def apply(
+    zoomLevel: Option[Int],
+    rdd: RDD[(SpaceTimeKey, MultibandTile)] with Metadata[TileLayerMetadata[SpaceTimeKey]]
+  ): TemporalTiledRasterRDD =
+    new TemporalTiledRasterRDD(zoomLevel, rdd)
 }
