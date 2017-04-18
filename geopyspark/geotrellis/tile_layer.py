@@ -299,11 +299,10 @@ def reproject(geopysc,
                                          resample_method,
                                          error_threshold)
 
-    (rdd, returned_schema) = (result._1()._1(), result._1()._2())
-    ser = geopysc.create_tuple_serializer(returned_schema, value_type=TILE)
-    returned_rdd = geopysc.create_python_rdd(rdd, ser)
+    ser = geopysc.create_tuple_serializer(result._2(), value_type=TILE)
+    returned_rdd = geopysc.create_python_rdd(result._1(), ser)
 
-    return (returned_rdd, json.loads(result._2()))
+    return returned_rdd
 
 def reproject_to_layout(geopysc,
                         rdd_type,

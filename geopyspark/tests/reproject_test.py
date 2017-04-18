@@ -2,7 +2,7 @@ import os
 import unittest
 
 from geopyspark.tests.python_test_utils import check_directory, geotiff_test_path
-from geopyspark.geotrellis.tile_layer import reproject_to_layout, collect_metadata, tile_to_layout
+from geopyspark.geotrellis.tile_layer import reproject, reproject_to_layout, collect_metadata, tile_to_layout
 from geopyspark.geotrellis.geotiff_rdd import geotiff_rdd
 from geopyspark.tests.base_test_class import BaseTestClass
 from geopyspark.geotrellis.constants import SPATIAL
@@ -41,6 +41,11 @@ class ReprojectTest(BaseTestClass):
                                   SPATIAL,
                                   rdd,
                                   metadata)
+
+    def test_untiled(self):
+        reproject(BaseTestClass.geopysc,
+                  self.laid_out_rdd,
+                  "EPSG:4326")
 
     def test_same_crs_layout(self):
         (_, _, new_metadata) = reproject_to_layout(BaseTestClass.geopysc,
