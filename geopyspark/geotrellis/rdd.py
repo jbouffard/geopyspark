@@ -13,6 +13,8 @@ from geopyspark.geotrellis.constants import (RESAMPLE_METHODS,
 class RasterRDD(object):
     """Holds an RDD of GeoTrellis rasters"""
 
+    __slots__ = ['geopysc', 'rdd_type', 'srdd']
+
     def __init__(self, geopysc, rdd_type, srdd):
         self.geopysc = geopysc
         self.rdd_type = rdd_type
@@ -26,10 +28,14 @@ class RasterRDD(object):
         ser = geopysc.create_tuple_serializer(schema, key_type=None, value_type=TILE)
         reserialized_rdd = numpy_rdd._reserialize(ser)
 
-        if key == "ProjectedExtent":
-            srdd = geopysc._projected_raster_rdd.fromAvroEncodedRDD(reserialized_rdd._jrdd, schema)
+        if rdd_type == SPATIAL:
+            srdd = \
+                    geopysc._jvm.geopyspark.geotrellis.ProjectedRasterRDD.fromAvroEncodedRDD(
+                        reserialized_rdd._jrdd, schema)
         else:
-            srdd = geopysc._temporal_raster_rdd.fromAvroEncodedRDD(reserialized_rdd._jrdd, schema)
+            srdd = \
+                    geopysc._jvm.geopyspark.geotrellis.TemporalRasterRDD.fromAvroEncodedRDD(
+                        reserialized_rdd._jrdd, schema)
 
         return cls(geopysc, rdd_type, srdd)
 
@@ -66,21 +72,23 @@ class RasterRDD(object):
         return RasterRDD(self.geopysc, self.rdd_type,
                          self.srdd.reproject(target_crs, resample_method))
 
-    def cut_tiles(self, layerMetadata, resample_method=NEARESTNEIGHBOR, cellType=None):
+    def cut_tiles(self, layer_metadata, resample_method=NEARESTNEIGHBOR):
         """Cut tiles to layout. May result in duplicate keys"""
         assert(resample_method in RESAMPLE_METHODS)
-        srdd = self.srdd.cutTiles(json.dumps(layerMetadata), resample_method)
+        srdd = self.srdd.cutTiles(json.dumps(layer_metadata), resample_method)
         return TiledRasterRDD(self.geopysc, self.rdd_type, srdd)
 
-    def tile_to_layout(self, layerMetadata, resample_method=NEARESTNEIGHBOR):
+    def tile_to_layout(self, layer_metadata, resample_method=NEARESTNEIGHBOR):
         """Cut tiles to layout and merge overlapping tiles. This will produce unique keys"""
         assert(resample_method in RESAMPLE_METHODS)
-        srdd = self.srdd.tileToLayout(json.dumps(layerMetadata), resample_method)
+        srdd = self.srdd.tileToLayout(json.dumps(layer_metadata), resample_method)
         return TiledRasterRDD(self.geopysc, self.rdd_type, srdd)
 
 
 class TiledRasterRDD(object):
     """Holds an RDD of GeoTrellis tile layer"""
+
+    __slots__ = ['geopysc', 'rdd_type', 'srdd']
 
     def __init__(self, geopysc, rdd_type, srdd):
         self.geopysc = geopysc
@@ -104,7 +112,7 @@ class TiledRasterRDD(object):
         ser = geopysc.create_tuple_serializer(schema, key_type=None, value_type=TILE)
         reserialized_rdd = numpy_rdd._reserialize(ser)
 
-        if key == SPATIAL:
+        if rdd_type == SPATIAL:
             srdd = \
                     geopysc._jvm.geopyspark.geotrellis.SpatialTiledRasterRDD.fromAvroEncodedRDD(
                         reserialized_rdd._jrdd, schema, json.dumps(metadata))
@@ -117,7 +125,7 @@ class TiledRasterRDD(object):
 
     def to_numpy_rdd(self):
         result = self.srdd.toAvroRDD()
-        ser = self.geopysc.create_tuple_serializer(result._2(), value_type="Tile")
+        ser = self.geopysc.create_tuple_serializer(result._2(), value_type=TILE)
         return self.geopysc.create_python_rdd(result._1(), ser)
 
     def reproject(self, target_crs, extent=None, layout=None, scheme=FLOAT, tile_size=256,

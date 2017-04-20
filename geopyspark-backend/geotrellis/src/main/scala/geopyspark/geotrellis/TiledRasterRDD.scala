@@ -5,12 +5,8 @@ import geopyspark.geotrellis.GeoTrellisUtils._
 import geotrellis.util._
 import geotrellis.proj4._
 import geotrellis.vector._
-import geotrellis.vector.io._
 import geotrellis.vector.io.wkt.WKT
 import geotrellis.raster._
-import geotrellis.raster.io._
-import geotrellis.raster.merge._
-import geotrellis.raster.prototype._
 import geotrellis.raster.resample.ResampleMethod
 import geotrellis.spark._
 import geotrellis.spark.pyramid._
@@ -89,9 +85,6 @@ abstract class TiledRasterRDD[K: SpatialComponent: AvroRecordCodec: JsonFormat: 
     layoutDefinition: LayoutDefinition,
     resampleMethod: String
   ): TiledRasterRDD[_]
-
-  def isZoomedLayer(tileSize: Int): Boolean =
-    (tileSize & (tileSize - 1)) == 0
 
   def pyramid(
     startZoom: Int,
@@ -370,9 +363,7 @@ object SpatialTiledRasterRDD {
     metadata: String
   ): SpatialTiledRasterRDD = {
     val md = metadata.parseJson.convertTo[TileLayerMetadata[SpatialKey]]
-    val tileLayer = MultibandTileLayerRDD(
-      PythonTranslator.fromPython[(SpatialKey, MultibandTile)](javaRDD, Some(schema)),
-      md)
+    val tileLayer = MultibandTileLayerRDD(PythonTranslator.fromPython[(SpatialKey, MultibandTile)](javaRDD, Some(schema)), md)
 
     SpatialTiledRasterRDD(None, tileLayer)
   }
@@ -391,9 +382,7 @@ object TemporalTiledRasterRDD {
     metadata: String
   ): TemporalTiledRasterRDD = {
     val md = metadata.parseJson.convertTo[TileLayerMetadata[SpaceTimeKey]]
-    val tileLayer = MultibandTileLayerRDD(
-      PythonTranslator.fromPython[(SpaceTimeKey, MultibandTile)](javaRDD, Some(schema)),
-      md)
+    val tileLayer = MultibandTileLayerRDD(PythonTranslator.fromPython[(SpaceTimeKey, MultibandTile)](javaRDD, Some(schema)), md)
 
     TemporalTiledRasterRDD(None, tileLayer)
   }
