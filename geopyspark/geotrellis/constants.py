@@ -1,13 +1,15 @@
+"""Constants that are used by geopyspark.geotrellis classes, methods, and functions."""
+
 """
 Indicates that the RDD contains (K, V) pairs, where the K has a spatial attribute,
-but no time value. Both projected_extent and spatial_key are examples of this
+but no time value. Both ProjectedExtent and SpatialKey are examples of this
 type of K.
 """
 SPATIAL = 'spatial'
 
 """
 Indicates that the RDD contains (K, V) pairs, where the K has a spatial and
-time attribute. Both temporal_projected_extent and spacetime_key are examples
+time attribute. Both TemporalProjectedExtent and SpaceTimeKey are examples
 of this type of K.
 """
 SPACETIME = 'spacetime'
@@ -111,31 +113,31 @@ MONTHS = 'months'
 YEARS = 'years'
 
 
-"""Neighborhood type: Annulus."""
+"""Neighborhood type."""
 ANNULUS = 'annulus'
 
-"""Neighborhood type: Nesw."""
+"""Neighborhood type."""
 NESW = 'nesw'
 
-"""Neighborhood type: Square."""
+"""Neighborhood type."""
 SQUARE = 'square'
 
-"""Neighborhood type: Wedge."""
+"""Neighborhood type."""
 WEDGE = 'wedge'
 
-"""Focal operation type: Sum."""
+"""Focal operation type."""
 SUM = 'Sum'
 
-"""Focal operation type: Mean."""
+"""Focal operation type."""
 MEAN = 'Mean'
 
-"""Focal operation type: Aspect."""
+"""Focal operation type"""
 ASPECT = 'Aspect'
 
-"""Focal operation type: Slope."""
+"""Focal operation type."""
 SLOPE = 'Slope'
 
-"""Focal operation type: Standard Deviation."""
+"""Focal operation type."""
 STANDARDDEVIATION = 'StandardDeviation'
 
 OPERATIONS = [
