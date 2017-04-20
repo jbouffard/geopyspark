@@ -6,7 +6,8 @@ from geopyspark.geotrellis.constants import (RESAMPLE_METHODS,
                                              NEIGHBORHOODS,
                                              NEARESTNEIGHBOR,
                                              FLOAT,
-                                             TILE
+                                             TILE,
+                                             SPATIAL
                                             )
 
 class RasterRDD(object):
@@ -30,7 +31,7 @@ class RasterRDD(object):
         else:
             srdd = geopysc._temporal_raster_rdd.fromAvroEncodedRDD(reserialized_rdd._jrdd, schema)
 
-        return cls(geopysc, key, srdd)
+        return cls(geopysc, rdd_type, srdd)
 
     def to_numpy_rdd(self):
         result = self.srdd.toAvroRDD()
@@ -93,7 +94,7 @@ class TiledRasterRDD(object):
 
     @property
     def zoom_level(self):
-        zoom = self.srdd.getZoom()
+        return self.srdd.getZoom()
 
     @classmethod
     def from_numpy_rdd(cls, geopysc, rdd_type, numpy_rdd, metadata):
@@ -103,7 +104,7 @@ class TiledRasterRDD(object):
         ser = geopysc.create_tuple_serializer(schema, key_type=None, value_type=TILE)
         reserialized_rdd = numpy_rdd._reserialize(ser)
 
-        if key == "SpatialKey":
+        if key == SPATIAL:
             srdd = \
                     geopysc._jvm.geopyspark.geotrellis.SpatialTiledRasterRDD.fromAvroEncodedRDD(
                         reserialized_rdd._jrdd, schema, json.dumps(metadata))
@@ -147,6 +148,11 @@ class TiledRasterRDD(object):
     def pyramid(self, start_zoom, end_zoom, resample_method=NEARESTNEIGHBOR):
         assert(resample_method in RESAMPLE_METHODS)
 
+        size = self.layer_metadata['layoutDefinition']['tileLayout']['tileRows']
+
+        if (size & (size - 1)) != 0:
+            raise ValueError("Tiles must have a col and row count that is a power of 2")
+
         result = self.srdd.pyramid(start_zoom, end_zoom, resample_method)
 
         return [TiledRasterRDD(self.geopysc, self.rdd_type, srdd) for srdd in result]
@@ -167,7 +173,7 @@ class TiledRasterRDD(object):
         return TiledRasterRDD(self.geopysc, self.rdd_type, srdd)
 
     def stitch(self):
-        assert(self.rdd_type == "SpatialKey",
+        assert(self.rdd_type == SPATIAL,
                "Only TiledRasterRDDs with a rdd_type of SpatialKey can use stitch()")
 
         tup = self.srdd.stitch()
