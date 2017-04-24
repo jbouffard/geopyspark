@@ -12,8 +12,26 @@ from geopyspark.geotrellis.constants import (RESAMPLE_METHODS,
                                              NEARESTNEIGHBOR,
                                              FLOAT,
                                              TILE,
-                                             SPATIAL
+                                             SPATIAL,
+                                             LESSTHANOREQUALTO
                                             )
+
+def _reclassify(srdd, value_map, data_type, boundary_strategy):
+    new_dict = {}
+
+    for key, value in value_map.items():
+        if not isinstance(key, data_type):
+            val = value_map[key]
+            for k in key:
+                new_dict[k] = val
+        else:
+            new_dict[key] = value
+
+    if data_type is int:
+        return srdd.reclassify(new_dict, boundary_strategy)
+    else:
+        return srdd.reclassifyDouble(new_dict, boundary_strategy)
+
 
 class RasterRDD(object):
     """A RDD that contains GeoTrellis rasters.
@@ -172,6 +190,30 @@ class RasterRDD(object):
         assert(resample_method in RESAMPLE_METHODS)
         srdd = self.srdd.tileToLayout(json.dumps(layer_metadata), resample_method)
         return TiledRasterRDD(self.geopysc, self.rdd_type, srdd)
+
+    def reclassify(self, value_map, data_type, boundary_strategy=LESSTHANOREQUALTO):
+        """Changes the cell values of a raster based on how the data is broken up.
+
+        Args:
+            value_map (dict): A ``dict`` whose keys represent values where a break should occur and
+                its values are the new value the cells within the break should become.
+            data_type (type): The type of the values within the rasters. Can either be ``int`` or
+                ``float``.
+            boundary_strategy (str, optional): How the cells should be classified along the breaks.
+                If unspecified, then ``LESSTHANOREQUALTO`` will be used.
+
+        NOTE:
+            Simbolizing a NoData value differs depending on if the ``data_type`` is an ``int`` or a
+            ``float``. For an ``int``, the constant ``NODATAINT`` can be used which represents the
+            NoData value for ``int`` in GeoTrellis. If ``float``, then ``float('nan')`` is used to
+            represent NoData.
+
+        Returns:
+            :class:`~geopyspark.geotrellis.rdd.RasterRDD`
+        """
+
+        srdd = _reclassify(self.srdd, value_map, data_type, boundary_strategy)
+        return RasterRDD(self.geopysc, self.rdd_type, srdd)
 
 
 class TiledRasterRDD(object):
@@ -411,4 +453,28 @@ class TiledRasterRDD(object):
         wkts = [shapely.wkt.dumps(g) for g in geometries]
         srdd = self.srdd.costDistance(self.geopysc.sc, wkts, max_distance)
 
+        return TiledRasterRDD(self.geopysc, self.rdd_type, srdd)
+
+    def reclassify(self, value_map, data_type, boundary_strategy=LESSTHANOREQUALTO):
+        """Changes the cell values of a raster based on how the data is broken up.
+
+        Args:
+            value_map (dict): A ``dict`` whose keys represent values where a break should occur and
+                its values are the new value the cells within the break should become.
+            data_type (type): The type of the values within the rasters. Can either be ``int`` or
+                ``float``.
+            boundary_strategy (str, optional): How the cells should be classified along the breaks.
+                If unspecified, then ``LESSTHANOREQUALTO`` will be used.
+
+        NOTE:
+            Simbolizing a NoData value differs depending on if the ``data_type`` is an ``int`` or a
+            ``float``. For an ``int``, the constant ``NODATAINT`` can be used which represents the
+            NoData value for ``int`` in GeoTrellis. If ``float``, then ``float('nan')`` is used to
+            represent NoData.
+
+        Returns:
+            :class:`~geopyspark.geotrellis.rdd.TiledRasterRDD`
+        """
+
+        srdd = _reclassify(self.srdd, value_map, data_type, boundary_strategy)
         return TiledRasterRDD(self.geopysc, self.rdd_type, srdd)

@@ -7,6 +7,7 @@ import geotrellis.proj4._
 import geotrellis.vector._
 import geotrellis.vector.io.wkt.WKT
 import geotrellis.raster._
+import geotrellis.raster.render._
 import geotrellis.raster.resample.ResampleMethod
 import geotrellis.spark._
 import geotrellis.spark.pyramid._
@@ -234,6 +235,12 @@ class SpatialTiledRasterRDD(
 
     SpatialTiledRasterRDD(None, multibandRDD)
   }
+
+  def reclassify(reclassifiedRDD: RDD[(SpatialKey, MultibandTile)]): TiledRasterRDD[SpatialKey] =
+    SpatialTiledRasterRDD(zoomLevel, MultibandTileLayerRDD(reclassifiedRDD, rdd.metadata))
+
+  def reclassifyDouble(reclassifiedRDD: RDD[(SpatialKey, MultibandTile)]): TiledRasterRDD[SpatialKey] =
+    SpatialTiledRasterRDD(zoomLevel, MultibandTileLayerRDD(reclassifiedRDD, rdd.metadata))
 }
 
 
@@ -353,6 +360,12 @@ class TemporalTiledRasterRDD(
 
     TemporalTiledRasterRDD(None, multibandRDD)
   }
+
+  def reclassify(reclassifiedRDD: RDD[(SpaceTimeKey, MultibandTile)]): TiledRasterRDD[SpaceTimeKey] =
+    TemporalTiledRasterRDD(zoomLevel, MultibandTileLayerRDD(reclassifiedRDD, rdd.metadata))
+
+  def reclassifyDouble(reclassifiedRDD: RDD[(SpaceTimeKey, MultibandTile)]): TiledRasterRDD[SpaceTimeKey] =
+    TemporalTiledRasterRDD(zoomLevel, MultibandTileLayerRDD(reclassifiedRDD, rdd.metadata))
 }
 
 
