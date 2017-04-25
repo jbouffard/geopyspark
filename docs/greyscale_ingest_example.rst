@@ -1,9 +1,9 @@
 .. _greyscale_ingest_example:
 
-Ingesting a Greyscal Image Using GeoPySpark
+Ingesting a Grayscale Image Using GeoPySpark
 ********************************************
 
-This example shows how to ingest a greayscale image from S3 and save the
+This example shows how to ingest a grayscale image from S3 and save the
 results locally. The data is stored on a bucket that is open to everyone to
 read, so feel free to run this example yourself.
 
@@ -11,7 +11,7 @@ The Code
 ========
 
 Here's the code to run the ingest. One of the biggest benefits of using
-GeoPySpark is how much simplier it is to run an ingest than if you were
+GeoPySpark is how much simpler it is to run an ingest than if you were
 using GeoTrellis. Whereas GeoTrellis needs various configuration files run an
 ingest, GeoPySpark can perform the same task in just a single script.
 
@@ -52,7 +52,7 @@ Running the code is simple, and you have two different ways of doing it.
 The first is to copy and paste the code into a console like, iPython, and then
 running it.
 
-The second is to place this code in a python file and then saving it. To run it
+The second is to place this code in a Python file and then saving it. To run it
 from the file, go to the directory the file is in and run this command
 
 .. code-block:: none
@@ -66,7 +66,7 @@ Just replace ``file.py`` with whatever name you decided to call the file.
 Breaking Down the Code
 =======================
 
-Now that the code has been writen let's go through it step-by-step to see
+Now that the code has been written let's go through it step-by-step to see
 what's actually going on.
 
 The Imports
@@ -118,7 +118,7 @@ Collecting the Metadata
  metadata = rdd.collect_metadata()
 
 Before we can begin formatting the data to our desired layout, we must first
-collect the :ref:`metadata` of the enitre RDD. The metadata itself will contain
+collect the :ref:`metadata` of the entire RDD. The metadata itself will contain
 the :ref:`tile_layout` that the data will be formatted to. There are various
 ways to collect the metadata depending on how you want the layout to look
 (see :meth:`~geopyspark.geotrellis.rdd.RasterRDD.collect_metadata`), but for
