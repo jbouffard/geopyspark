@@ -11,14 +11,14 @@ if sys.version_info < (3, 3):
 
 URL = 'https://github.com/locationtech-labs/geopyspark/releases/download/v0.1.0-RC1/'
 JAR = 'geotrellis-backend-assembly-0.1.0.jar'
-JAR_PATH = 'geopyspark/jars/' + JAR
+JAR_PATH = 'geopyspark/jars/'
 
 
 class Installer(install):
     def run(self):
         if not os.path.isfile(JAR_PATH):
-            subprocess.call(['wget', URL + JAR, '-P', JAR_PATH])
-            #subprocess.call(['curl', '-L', URL + JAR, '-o', JAR_PATH])
+            #subprocess.call(['wget', URL + JAR, '-P', JAR_PATH])
+            subprocess.call(['curl', '-L', URL + JAR, '-o', JAR_PATH + JAR])
         install.run(self)
 
 
