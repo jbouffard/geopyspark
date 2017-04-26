@@ -17,8 +17,7 @@ JAR_PATH = 'geopyspark/jars/'
 class Installer(install):
     def run(self):
         if not os.path.isfile(JAR_PATH):
-            subprocess.call(['wget', URL + JAR, '-P', JAR_PATH])
-            #subprocess.call(['curl', '-L', URL + JAR, '-o', JAR_PATH + JAR])
+            subprocess.call(['curl', '-L', URL + JAR, '-o', JAR_PATH + JAR])
         install.run(self)
 
 

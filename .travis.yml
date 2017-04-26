@@ -25,11 +25,9 @@ addons:
       - oracle-java8-set-default
 
 before_install:
-  - curl -L https://github.com/locationtech-labs/geopyspark/releases/download/v0.1.0-RC1/geotrellis-backend-assembly-0.1.0.jar
-  - mv geotrellis-backend-assembly-0.1.0.jar geopyspark/jars
-#- cd geopyspark-backend && ./sbt "project geotrellis-backend" assembly
-#- cp geotrellis/target/scala-2.11/geotrellis-backend-assembly-0.1.0.jar ../geopyspark/jars
-#- cd ..
+  - cd geopyspark-backend && ./sbt "project geotrellis-backend" assembly
+  - cp geotrellis/target/scala-2.11/geotrellis-backend-assembly-0.1.0.jar ../geopyspark/jars
+  - cd ..
 
 install:
   - pip3 install -r requirements.txt
