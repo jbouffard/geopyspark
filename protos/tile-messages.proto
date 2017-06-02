@@ -1,0 +1,89 @@
+syntax = "proto3";
+
+package protos;
+
+message TileInfo {
+  string name = 1;
+  int32 cols = 2;
+  int32 rows = 3;
+}
+
+message Int32Tile {
+  TileInfo info = 1;
+  repeated sint32 cells = 2;
+  sint32 noDataValue = 3;
+}
+
+message UInt32Tile {
+  TileInfo info = 1;
+  repeated int32 cells = 2;
+  int32 noDataValue = 3;
+}
+
+message BitData {
+  message BitArrayTile {
+    UInt32Tile tile = 1;
+  }
+
+  repeated BitArrayTile bands = 1;
+}
+
+message ByteData {
+  message ByteArrayTile {
+    Int32Tile tile = 1;
+  }
+
+  repeated ByteArrayTile bands = 1;
+}
+
+message UByteData {
+  message UByteArrayTile {
+    UInt32Tile tile = 1;
+  }
+
+  repeated UByteArrayTile bands = 1;
+}
+
+message ShortData {
+  message ShortArrayTile {
+    Int32Tile tile = 1;
+  }
+
+  repeated ShortArrayTile bands = 1;
+}
+
+message UShortData {
+  message UShortArrayTile {
+    UInt32Tile tile = 1;
+  }
+
+  repeated UShortArrayTile bands = 1;
+}
+
+message IntData {
+  message IntArrayTile {
+    Int32Tile tile = 1;
+  }
+
+  repeated IntArrayTile bands = 1;
+}
+
+message FloatData {
+  message FloatArrayTile {
+    TileInfo info = 1;
+    repeated float cells = 2;
+    float noDataValue = 3;
+  }
+
+  repeated FloatArrayTile bands = 1;
+}
+
+message DoubleData {
+  message DoubleArrayTile {
+    TileInfo info = 1;
+    repeated double cells = 2;
+    double noDataValue = 3;
+  }
+
+  repeated DoubleArrayTile bands = 1;
+}

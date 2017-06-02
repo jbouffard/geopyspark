@@ -1,0 +1,34 @@
+syntax = "proto3";
+
+package protos;
+
+import "extent-messages.proto";
+import "key-messages.proto";
+import "tile-messages.proto";
+
+message First {
+  oneof first {
+    ProjectedExtent projected_extnet = 1;
+    TemporalProjectedExtent temporal_projected_extnet = 2;
+    SpatialKey spatial_key = 3;
+    SpaceTimeKey space_time_key = 4;
+  }
+}
+
+message Second {
+  oneof second {
+    BitData bit_raster = 1;
+    ByteData byte_raster = 2;
+    UByteData ubyte_raster = 3;
+    ShortData short_raster = 4;
+    UShortData ushort_raster = 5;
+    IntData int_raster = 6;
+    FloatData float_raster = 7;
+    DoubleData double_raster = 8;
+  }
+}
+
+message Tuple2 {
+  First _1 = 1;
+  Second _2 = 2;
+}
