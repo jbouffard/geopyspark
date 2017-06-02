@@ -12,8 +12,7 @@ libraryDependencies ++= Seq(
   "org.locationtech.geotrellis" %% "geotrellis-hbase"      % Version.geotrellis,
   "org.locationtech.geotrellis" %% "geotrellis-s3"         % Version.geotrellis,
   "org.locationtech.geotrellis" %% "geotrellis-s3-testkit" % "1.0.0",
-  "org.locationtech.geotrellis" %% "geotrellis-spark"      % Version.geotrellis
-)
+  "org.locationtech.geotrellis" %% "geotrellis-spark"      % Version.geotrellis)
 
 assemblyMergeStrategy in assembly := {
   case "reference.conf" => MergeStrategy.concat
@@ -24,3 +23,7 @@ assemblyMergeStrategy in assembly := {
   case "META-INF/ECLIPSEF.SF" => MergeStrategy.discard
   case _ => MergeStrategy.first
 }
+
+PB.targets in Compile := Seq(
+  scalapb.gen() -> (sourceManaged in Compile).value
+)
