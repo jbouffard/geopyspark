@@ -28,5 +28,5 @@ Second.add_field('ushort_raster', MessageField(field_number=5, optional=True, me
 Second.add_field('int_raster', MessageField(field_number=6, optional=True, message_cls=IntData))
 Second.add_field('float_raster', MessageField(field_number=7, optional=True, message_cls=FloatData))
 Second.add_field('double_raster', MessageField(field_number=8, optional=True, message_cls=DoubleData))
-Tuple2.add_field('_1', MessageField(field_number=1, optional=True, message_cls=First))
-Tuple2.add_field('_2', MessageField(field_number=2, optional=True, message_cls=Second))
+Tuple2.add_field('key', MessageField(field_number=1, optional=True, message_cls=First))
+Tuple2.add_field('value', MessageField(field_number=2, optional=True, message_cls=Second))
