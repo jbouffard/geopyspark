@@ -8,8 +8,9 @@ import protos.extentMessages.{TemporalProjectedExtent => ProtoTemporalProjectedE
 
 
 trait TemporalProjectedExtentProtoBuf {
-/*
-  implicit def temporalProjectedExtentProtoBufFormat = new ProtoBufCodec[TemporalProjectedExtent, ProtoTemporalProjectedExtent] {
+  implicit def temporalProjectedExtentProtoBufFormat = new ProtoBufCodec[TemporalProjectedExtent] {
+    type M = ProtoTemporalProjectedExtent
+
     def encode(extent: TemporalProjectedExtent): ProtoTemporalProjectedExtent =
       ProtoTemporalProjectedExtent(
         extent = Some(extentProtoBufCodec.encode(extent.extent)),
@@ -24,5 +25,4 @@ trait TemporalProjectedExtentProtoBuf {
         message.instant
       )
   }
-*/
 }
