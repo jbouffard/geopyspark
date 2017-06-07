@@ -17,5 +17,5 @@ message First {
 
 message Tuple2 {
   First key = 1;
-  MultibandTile bands = 2;
+  Multiband bands = 2;
 }

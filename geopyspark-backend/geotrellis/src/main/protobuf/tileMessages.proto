@@ -4,78 +4,58 @@ package protos;
 
 message TileInfo {
   string name = 1;
-  int32 cols = 2;
-  int32 rows = 3;
+  uint32 cols = 2;
+  uint32 rows = 3;
 }
 
-message Int32NoData {
-  sint32 noDataValue = 1;
+message NoData {
+  oneof value {
+    sint32 int32NoDataValue = 1;
+    uint32 uInt32NoDataValue = 2;
+    float floatNoDataValue = 3;
+    double doubleNoDataValue = 4;
+  }
 }
 
-message UInt32NoData {
-  int32 noDataValue = 1;
-}
-
-message BitTile {
+message Int32Tile {
   TileInfo info = 1;
   repeated sint32 cells = 2;
+  NoData noDataValue = 3;
 }
 
-message ByteTile {
+message UInt32Tile {
   TileInfo info = 1;
-  repeated sint32 cells = 2;
-  Int32NoData noDataValue = 3;
-}
-
-message UByteTile {
-  TileInfo info = 1;
-  repeated int32 cells = 2;
-  UInt32NoData noDataValue = 3;
-}
-
-message ShortTile {
-  TileInfo info = 1;
-  repeated sint32 cells = 2;
-  Int32NoData noDataValue = 3;
-}
-
-message UShortTile {
-  TileInfo info = 1;
-  repeated int32 cells = 2;
-  UInt32NoData noDataValue = 3;
-}
-
-message IntTile {
-  TileInfo info = 1;
-  repeated sint32 cells = 2;
-  Int32NoData noDataValue = 3;
+  repeated uint32 cells = 2;
+  NoData noDataValue = 3;
 }
 
 message FloatTile {
   TileInfo info = 1;
   repeated float cells = 2;
-  float noDataValue = 3;
+  NoData noDataValue = 3;
 }
 
 message DoubleTile {
   TileInfo info = 1;
   repeated double cells = 2;
-  double noDataValue = 3;
+  NoData noDataValue = 3;
 }
 
-message MultibandTile {
-  message TileType {
-    oneof bands {
-      BitTile bit_tiles = 1;
-      ByteTile byte_tiles = 2;
-      UByteTile ubyte_tiles = 3;
-      ShortTile short_tiles = 4;
-      UShortTile ushort_tiles = 5;
-      IntTile int_tiles = 6;
-      FloatTile float_tiles = 7;
-      DoubleTile double_tiles = 8;
-    }
+message Multiband {
+  enum Types {
+    BIT = 0;
+    BYTE = 1;
+    UBYTE = 2;
+    SHORT = 3;
+    USHORT = 4;
+    INT = 5;
+    FLOAT = 6;
+    DOUBLE = 7;
   }
 
-  repeated TileType tiles = 1;
+  Types type = 1;
+  repeated Int32Tile int32Tiles = 2;
+  repeated UInt32Tile uint32Tiles = 3;
+  repeated FloatTile floatTiles = 4;
+  repeated DoubleTile doubleTiles = 5;
 }
