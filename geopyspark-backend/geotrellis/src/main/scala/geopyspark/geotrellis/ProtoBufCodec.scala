@@ -2,20 +2,18 @@ package geopyspark.geotrellis
 
 import scala.reflect._
 
-import com.trueaccord.scalapb.Message
 import com.trueaccord.scalapb.GeneratedMessage
-import com.trueaccord.scalapb.GeneratedMessageCompanion
-import com.google.protobuf.AbstractMessage
 
+abstract class ProtoBufCodec[T: ClassTag] {
+  type M <: GeneratedMessage
 
-/*
-abstract class ProtoBuffCodec[T, M] {
   def encode(thing: T): M
   def decode(message: M): T
+
+  def supported[O](other: O): Boolean =
+    implicitly[ClassTag[T]].unapply(other).isDefined
 }
-*/
 
-abstract class ProtoBufCodec[T: ClassTag, M <: GeneratedMessage] {
-  def encode(thing: T): M
-  def decode(message: M): T
+object ProToBufCodec {
+  def apply[T: ProtoBufCodec]: ProtoBufCodec[T] = implicitly
 }
