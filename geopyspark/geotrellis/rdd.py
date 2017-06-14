@@ -66,9 +66,9 @@ class CachableRDD(object):
 
     def wrapped_rdds(self):
         """
-        Returns the list of RDD-containing objects wrapped by this object.  
-        The default implementation assumes that subclass contains a single 
-        RDD container, srdd, which implements the persist() and unpersist() 
+        Returns the list of RDD-containing objects wrapped by this object.
+        The default implementation assumes that subclass contains a single
+        RDD container, srdd, which implements the persist() and unpersist()
         methods.
         """
         return [self.srdd]
@@ -104,6 +104,7 @@ class CachableRDD(object):
         for srdd in self.wrapped_rdds():
             srdd.unpersist()
         return self
+
 
 class RasterRDD(CachableRDD):
     """A wrapper of a RDD that contains GeoTrellis rasters.
@@ -157,8 +158,6 @@ class RasterRDD(CachableRDD):
         """
 
         key = geopysc.map_key_input(rdd_type, False)
-
-        schema = geopysc.create_schema(key)
         ser = geopysc.create_tuple_serializer(key_type=key)
         reserialized_rdd = numpy_rdd._reserialize(ser)
 
@@ -457,8 +456,6 @@ class TiledRasterRDD(CachableRDD):
             :class:`~geopyspark.geotrellis.rdd.TiledRasterRDD`
         """
         key = geopysc.map_key_input(rdd_type, True)
-
-        schema = geopysc.create_schema(key)
         ser = geopysc.create_tuple_serializer(key_type=key)
         reserialized_rdd = numpy_rdd._reserialize(ser)
 
@@ -670,7 +667,7 @@ class TiledRasterRDD(CachableRDD):
             raise IndexError("row out of bounds")
 
         array_of_tiles = self.srdd.lookup(col, row)
-        ser = self.geopysc.create_value_serializer(TILE)
+        ser = self.geopysc.create_value_serializer("MultibandTile")
 
         return [ser.loads(tile)[0] for tile in array_of_tiles]
 
@@ -819,7 +816,7 @@ class TiledRasterRDD(CachableRDD):
             raise ValueError("Only TiledRasterRDDs with a rdd_type of Spatial can use stitch()")
 
         value = self.srdd.stitch()
-        ser = self.geopysc.create_value_serializer("Tile")
+        ser = self.geopysc.create_value_serializer(TILE)
         return ser.loads(value)[0]
 
     def mask(self, geometries):

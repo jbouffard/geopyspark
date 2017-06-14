@@ -158,4 +158,3 @@ class PngRDD(CachableRDD):
 
     def wrapped_rdds(self):
         return self.pngpyramid
-
