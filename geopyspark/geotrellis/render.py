@@ -55,6 +55,8 @@ def get_hex(geopysc, ramp_name, num_colors=None):
 
 
 class PngRDD(CachableRDD):
+    __slots__ = ['geopysc', 'rdd_type', 'layer_metadata', 'max_zoom', 'pngpyramid', 'debug']
+
     def __init__(self, pyramid, ramp_name, debug=False):
         """Convert a pyramid of TiledRasterRDDs into a displayable structure of PNGs
 
@@ -68,8 +70,6 @@ class PngRDD(CachableRDD):
                 HEATMAP_DARK_RED_TO_YELLOW_WHITE, HEATMAP_LIGHT_PURPLE_TO_DARK_PURPLE_TO_WHITE,
                 CLASSIFICATION_BOLD_LAND_USE, and CLASSIFICATION_MUTED_TERRAIN
         """
-
-        __slots__ = ['geopysc', 'rdd_type', 'layer_metadata', 'max_zoom', 'pngpyramid', 'debug']
 
         if ramp_name not in COLOR_RAMPS:
             raise ValueError(ramp_name, "Is not a known color ramp")
