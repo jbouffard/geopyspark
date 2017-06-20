@@ -14,6 +14,9 @@ from geopyspark.protobuf import keyMessages_pb2
 from geopyspark.protobuf import tupleMessages_pb2
 
 
+#__all__ = ["ProtoBufRegistry"]
+
+
 class ProtoBufRegistry(object):
     """Holds the encoding/decoding methods needed to bring a scala RDD to/from Python."""
 

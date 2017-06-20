@@ -3,6 +3,10 @@
 from geopyspark.geotrellis.rdd import RasterRDD
 from functools import reduce
 
+
+__all__ = ["get"]
+
+
 def get(geopysc,
         rdd_type,
         uri,

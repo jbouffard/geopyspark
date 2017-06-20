@@ -6,6 +6,9 @@ from .rdd import CachableRDD
 from pyspark.storagelevel import StorageLevel
 
 
+__all__ = ["get_breaks", "get_hex", "PngRDD"]
+
+
 def get_breaks(geopysc, ramp_name, num_colors=None):
     """Returns a list of values that represent the breaks in color for the given color ramp.
 

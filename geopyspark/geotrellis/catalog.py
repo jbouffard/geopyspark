@@ -5,12 +5,17 @@ import json
 from collections import namedtuple
 from urllib.parse import urlparse
 
+from geopyspark.protobufregistry import ProtoBufRegistry
 from geopyspark.geotrellis import Metadata, Extent
 from geopyspark.geotrellis.rdd import TiledRasterRDD
 from geopyspark.geotrellis.constants import TILE, ZORDER, SPATIAL
 
 from shapely.geometry import Polygon, MultiPolygon, Point
 from shapely.wkt import dumps
+
+
+__all__ = ["read_layer_metadata", "read", "read_value", "get_layer_ids",
+           "query", "write"]
 
 
 _mapped_cached = {}
@@ -321,7 +326,9 @@ def read_value(geopysc,
         else:
             options = {}
 
-        _construct_catalog(geopysc, uri, options)
+        if uri not in _mapped_cached:
+            _construct_catalog(geopysc, uri, options)
+
         cached = _mapped_cached[uri]
 
         if not zdt:
@@ -329,19 +336,14 @@ def read_value(geopysc,
 
         key = geopysc.map_key_input(rdd_type, True)
 
-        tup = cached.value_reader.readTile(key,
-                                           layer_name,
-                                           layer_zoom,
-                                           col,
-                                           row,
-                                           zdt)
+        values = cached.value_reader.readTile(key,
+                                              layer_name,
+                                              layer_zoom,
+                                              col,
+                                              row,
+                                              zdt)
 
-        ser = geopysc.create_value_serializer("MultibandTile")
-
-        if uri not in _mapped_serializers:
-            _mapped_serializers[uri] = ser
-
-        return ser.loads(tup)[0]
+        return ProtoBufRegistry.multibandtile_decoder(values)
 
 def query(geopysc,
           rdd_type,

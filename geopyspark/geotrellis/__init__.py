@@ -8,6 +8,9 @@ from geopyspark.protobuf import keyMessages_pb2
 from geopyspark.protobuf import tupleMessages_pb2
 
 
+__all__ = ["catalog", "geotiff_rdd", "neighborhoods", "rdd", "render"]
+
+
 class Extent(namedtuple("Extent", 'xmin ymin xmax ymax')):
     """
     The "bounding box" or geographic region of an area on Earth a raster represents.

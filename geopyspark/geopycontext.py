@@ -8,6 +8,9 @@ from pyspark import RDD, SparkContext
 from pyspark.serializers import AutoBatchedSerializer
 
 
+#__all__ = ["GeoPyContext"]
+
+
 class GeoPyContext(object):
     """A wrapper of ``SparkContext``.
     This wrapper provides extra functionality by providing methods that help with sending/recieving
