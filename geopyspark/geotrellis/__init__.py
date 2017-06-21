@@ -73,12 +73,12 @@ class ProjectedExtent(namedtuple("ProjectedExtent", 'extent epsg proj4')):
     """Describes both the area on Earth a raster represents in addition to its CRS.
 
     Args:
-        extent (:cls:~geopyspark.geotrellis.Extent): The area the raster represents.
+        extent (:class:`~geopyspark.geotrellis.Extent`): The area the raster represents.
         epsg (int, optional): The EPSG code of the CRS.
         proj4 (str, optional): The Proj.4 string representation of the CRS.
 
     Attributes:
-        extent (:cls:~geopyspark.geotrellis.Extent): The area the raster represents.
+        extent (:class:`~geopyspark.geotrellis.Extent`): The area the raster represents.
         epsg (int, optional): The EPSG code of the CRS.
         proj4 (str, optional): The Proj.4 string representation of the CRS.
 
@@ -90,6 +90,16 @@ class ProjectedExtent(namedtuple("ProjectedExtent", 'extent epsg proj4')):
 
     def __new__(cls, extent, epsg=None, proj4=None):
         return super(ProjectedExtent, cls).__new__(cls, extent, epsg, proj4)
+
+    @classmethod
+    def from_protobuf_projected_extent(cls, proto_projected_extent):
+
+        if proto_projected_extent.crs.epsg is not 0:
+            return cls(extent=Extent.from_protobuf_extent(proto_projected_extent.extent),
+                       epsg=proto_projected_extent.crs.epsg)
+        else:
+            return cls(extent=Extent.from_protobuf_extent(proto_projected_extent.extent),
+                       proj4=proto_projected_extent.crs.proj4)
 
     def _asdict(self):
         if isinstance(self.extent, dict):
@@ -103,13 +113,13 @@ class TemporalProjectedExtent(namedtuple("TemporalProjectedExtent", 'extent inst
     collected.
 
     Args:
-        extent (:cls:`~geopyspark.geotrellis.Extent`): The area the raster represents.
+        extent (:class:`~geopyspark.geotrellis.Extent`): The area the raster represents.
         instance (int): The time stamp of the raster.
         epsg (int, optional): The EPSG code of the CRS.
         proj4 (str, optional): The Proj.4 string representation of the CRS.
 
     Attributes:
-        extent (:cls:~geopyspark.geotrellis.Extent): The area the raster represents.
+        extent (:class:`~geopyspark.geotrellis.Extent`): The area the raster represents.
         instance (int): The time stamp of the raster.
         epsg (int, optional): The EPSG code of the CRS.
         proj4 (str, optional): The Proj.4 string representation of the CRS.
@@ -162,8 +172,8 @@ Returns:
 
 
 SpatialKey = namedtuple("SpatialKey", 'col row')
-"""Represents the position of a raster within a grid.
-
+"""
+Represents the position of a raster within a grid.
 This grid is a 2D plane where raster positions are represented by a pair of coordinates.
 
 Args:
@@ -176,9 +186,10 @@ Returns:
 
 
 SpaceTimeKey = namedtuple("SpaceTimeKey", 'col row instant')
-"""Represents the position of a raster within a grid.
-This grid is a 3D plane where raster positions are represented by a pair of coordinates as well as
-a z value that represents time.
+"""
+Represents the position of a raster within a grid.
+This grid is a 3D plane where raster positions are represented by a pair of coordinates as well
+as a z value that represents time.
 
 Args:
     col (int): The column of the grid, the numbers run east to west.
@@ -209,7 +220,7 @@ class Bounds(namedtuple("Bounds", 'minKey maxKey')):
             The largest ``SpatialKey`` or ``SpaceTimeKey``.
 
     Returns:
-        :cls:`~geopyspark.geotrellis.Bounds`
+        :class:`~geopyspark.geotrellis.Bounds`
     """
 
     __slots__ = []
@@ -319,3 +330,20 @@ class Metadata(object):
             }
 
         return self._metadata_dict
+
+    def __repr__(self):
+        return "Metadata({}, {}, {}, {}, {}, {})".format(self.bounds, self.cell_type,
+                                                         self.crs, self.extent,
+                                                         self.tile_layout, self.layout_definition)
+
+
+    def __str__(self):
+        return ("Metadata("
+                "bounds={}"
+                "cellType={}"
+                "crs={}"
+                "extent={}"
+                "tileLayout={}"
+                "layoutDefinition={})").format(self.bounds, self.cell_type,
+                                               self.crs, self.extent,
+                                               self.tile_layout, self.layout_definition)

@@ -121,5 +121,4 @@ class PngRDD(CachableRDD):
         return [bytes for bytes in result]
 
     def wrapped_rdds(self):
-        print(self.pngpyramid.values())
         return iter(self.pngpyramid.values())

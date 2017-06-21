@@ -6,6 +6,8 @@ when performing operations.
 import json
 import shapely.wkt
 import shapely.wkb
+from geopyspark.geotrellis.protobufcodecs import multibandtile_decoder
+from geopyspark.geotrellis.protobufserializer import ProtoBufSerializer
 from geopyspark.geopyspark_utils import check_environment
 check_environment()
 
@@ -128,12 +130,13 @@ class CachableRDD(object):
             srdd.unpersist()
         return self
 
+
 class RasterRDD(CachableRDD):
     """A wrapper of a RDD that contains GeoTrellis rasters.
 
     Represents a RDD that contains ``(K, V)``. Where ``K`` is either
-    :cls:`~geopyspark.geotrellis.ProjectedExtent` or
-    :cls:`~geopyspark.geotrellis.TemporalProjectedExtent` depending on the ``rdd_type`` of the RDD,
+    :class:`~geopyspark.geotrellis.ProjectedExtent` or
+    :class:`~geopyspark.geotrellis.TemporalProjectedExtent` depending on the ``rdd_type`` of the RDD,
     and ``V`` being a :ref:`raster`.
 
     The data held within the RDD has not been tiled. Meaning the data has yet to be
@@ -172,27 +175,26 @@ class RasterRDD(CachableRDD):
             rdd_type (str): What the spatial type of the geotiffs are. This is
                 represented by the constants: ``SPATIAL`` and ``SPACETIME``.
             numpy_rdd (pyspark.RDD): A PySpark RDD that contains tuples of either
-                :ref:`projected_extent`\s or :ref:`temporal_extent`\s and rasters that are represented
-                by a numpy array.
+                :class:`~geopyspark.geotrellis.ProjectedExtent`\s or
+                :class:`~geopyspark.geotrellis.TemporalProjectedExtent`\s and rasters that
+                are represented by a numpy array.
 
         Returns:
             :class:`~geopyspark.geotrellis.rdd.RasterRDD`
         """
 
         key = geopysc.map_key_input(rdd_type, False)
-
-        schema = geopysc.create_schema(key)
-        ser = geopysc.create_tuple_serializer(schema, key_type=key, value_type=TILE)
+        ser = ProtoBufSerializer.create_tuple_serializer(key_type=key)
         reserialized_rdd = numpy_rdd._reserialize(ser)
 
         if rdd_type == SPATIAL:
             srdd = \
-                    geopysc._jvm.geopyspark.geotrellis.ProjectedRasterRDD.fromAvroEncodedRDD(
-                        reserialized_rdd._jrdd, schema)
+                    geopysc._jvm.geopyspark.geotrellis.ProjectedRasterRDD.fromProtoEncodedRDD(
+                        reserialized_rdd._jrdd)
         else:
             srdd = \
-                    geopysc._jvm.geopyspark.geotrellis.TemporalRasterRDD.fromAvroEncodedRDD(
-                        reserialized_rdd._jrdd, schema)
+                    geopysc._jvm.geopyspark.geotrellis.TemporalRasterRDD.fromProtoEncodedRDD(
+                        reserialized_rdd._jrdd)
 
         return cls(geopysc, rdd_type, srdd)
 
@@ -207,11 +209,11 @@ class RasterRDD(CachableRDD):
             ``pyspark.RDD``
         """
 
-        result = self.srdd.toAvroRDD()
+        result = self.srdd.toProtoRDD()
         key = self.geopysc.map_key_input(self.rdd_type, False)
-        ser = self.geopysc.create_tuple_serializer(result._2(), key_type=key,
-                                                   value_type=TILE)
-        return self.geopysc.create_python_rdd(result._1(), ser)
+        ser = ProtoBufSerializer.create_tuple_serializer(key_type=key)
+
+        return self.geopysc.create_python_rdd(result, ser)
 
     def to_tiled_layer(self, extent=None, layout=None, crs=None, tile_size=256,
                        resample_method=NEARESTNEIGHBOR):
@@ -422,7 +424,7 @@ class TiledRasterRDD(CachableRDD):
     """Wraps a RDD of tiled, GeoTrellis rasters.
 
     Represents a RDD that contains ``(K, V)``. Where ``K`` is either
-    :cls:`~geopyspark.geotrellis.SpatialKey` or :cls:`~geopyspark.geotrellis.SpaceTimeKey`
+    :class:`~geopyspark.geotrellis.SpatialKey` or :class:`~geopyspark.geotrellis.SpaceTimeKey`
     depending on the ``rdd_type`` of the RDD, and ``V`` being a :ref:`raster`.
 
     The data held within the RDD is tiled. This means that the rasters have been modified to fit
@@ -471,7 +473,8 @@ class TiledRasterRDD(CachableRDD):
             rdd_type (str): What the spatial type of the geotiffs are. This is represented by the
                 constants: ``SPATIAL`` and ``SPACETIME``.
             numpy_rdd (pyspark.RDD): A PySpark RDD that contains tuples of either
-                :ref:`spatial-key` or :ref:`space-time-key` and rasters that are represented by a
+                :class:`~geopyspark.geotrellis.SpatialKey` or
+                :class:`~geopyspark.geotrellis.SpaceTimeKey` and rasters that are represented by a
                 numpy array.
             metadata (:class:`~geopyspark.geotrellis.Metadata`): The ``Metadata`` of
                 the ``TiledRasterRDD`` instance.
@@ -480,9 +483,7 @@ class TiledRasterRDD(CachableRDD):
             :class:`~geopyspark.geotrellis.rdd.TiledRasterRDD`
         """
         key = geopysc.map_key_input(rdd_type, True)
-
-        schema = geopysc.create_schema(key)
-        ser = geopysc.create_tuple_serializer(schema, key_type=key, value_type=TILE)
+        ser = ProtoBufSerializer.create_tuple_serializer(key_type=key)
         reserialized_rdd = numpy_rdd._reserialize(ser)
 
         if isinstance(metadata, Metadata):
@@ -490,12 +491,12 @@ class TiledRasterRDD(CachableRDD):
 
         if rdd_type == SPATIAL:
             srdd = \
-                    geopysc._jvm.geopyspark.geotrellis.SpatialTiledRasterRDD.fromAvroEncodedRDD(
-                        reserialized_rdd._jrdd, schema, json.dumps(metadata))
+                    geopysc._jvm.geopyspark.geotrellis.SpatialTiledRasterRDD.fromProtoEncodedRDD(
+                        reserialized_rdd._jrdd, json.dumps(metadata))
         else:
             srdd = \
-                    geopysc._jvm.geopyspark.geotrellis.TemporalTiledRasterRDD.fromAvroEncodedRDD(
-                        reserialized_rdd._jrdd, schema, json.dumps(metadata))
+                    geopysc._jvm.geopyspark.geotrellis.TemporalTiledRasterRDD.fromProtoEncodedRDD(
+                        reserialized_rdd._jrdd, json.dumps(metadata))
 
         return cls(geopysc, rdd_type, srdd)
 
@@ -534,11 +535,11 @@ class TiledRasterRDD(CachableRDD):
         Returns:
             ``pyspark.RDD``
         """
-        result = self.srdd.toAvroRDD()
+        result = self.srdd.toProtoRDD()
         key = self.geopysc.map_key_input(self.rdd_type, True)
-        ser = self.geopysc.create_tuple_serializer(result._2(), key_type=key,
-                                                   value_type=TILE)
-        return self.geopysc.create_python_rdd(result._1(), ser)
+        ser = ProtoBufSerializer.create_tuple_serializer(key_type=key)
+
+        return self.geopysc.create_python_rdd(result, ser)
 
     def convert_data_type(self, new_type):
         """Converts the underlying, raster values to a new ``CellType``.
@@ -635,12 +636,9 @@ class TiledRasterRDD(CachableRDD):
         if row < min_row or row > max_row:
             raise IndexError("row out of bounds")
 
-        tup = self.srdd.lookup(col, row)
-        array_of_tiles = tup._1()
-        schema = tup._2()
-        ser = self.geopysc.create_value_serializer(schema, TILE)
+        array_of_tiles = self.srdd.lookup(col, row)
 
-        return [ser.loads(tile)[0] for tile in array_of_tiles]
+        return [multibandtile_decoder(tile) for tile in array_of_tiles]
 
     def tile_to_layout(self, layout, resample_method=NEARESTNEIGHBOR):
         """Cut tiles to a given layout and merge overlapping tiles. This will produce unique keys.
@@ -667,14 +665,15 @@ class TiledRasterRDD(CachableRDD):
 
         return TiledRasterRDD(self.geopysc, self.rdd_type, srdd)
 
-    def pyramid(self, start_zoom, end_zoom, resample_method=NEARESTNEIGHBOR):
+    def pyramid(self, end_zoom, start_zoom=None, resample_method=NEARESTNEIGHBOR):
         """Creates a pyramid of GeoTrellis layers where each layer reprsents a given zoom.
 
         Args:
-            start_zoom (int): The zoom level where pyramiding should begin. Represents
-                the level that is most zoomed in.
             end_zoom (int): The zoom level where pyramiding should end. Represents
                 the level that is most zoomed out.
+            start_zoom (int, Optional): The zoom level where pyramiding should begin. Represents
+                the level that is most zoomed in. If None, then will use the zoom level from
+                :meth:`~geopyspark.geotrellis.rdd.TiledRasterRDD.zoom_level`.
             resample_method (str, optional): The resample method to use for the reprojection.
                 This is represented by the following constants: ``NEARESTNEIGHBOR``, ``BILINEAR``,
                 ``CUBICCONVOLUTION``, ``LANCZOS``, ``AVERAGE``, ``MODE``, ``MEDIAN``, ``MAX``, and
@@ -696,6 +695,13 @@ class TiledRasterRDD(CachableRDD):
 
         if (num_cols & (num_cols - 1)) != 0 or (num_rows & (num_rows - 1)) != 0:
             raise ValueError("Tiles must have a col and row count that is a power of 2")
+
+        if start_zoom:
+            start_zoom = start_zoom
+        elif self.zoom_level:
+            start_zoom = self.zoom_level
+        else:
+            raise ValueError("No start_zoom given.")
 
         result = self.srdd.pyramid(start_zoom, end_zoom, resample_method)
 
@@ -778,9 +784,9 @@ class TiledRasterRDD(CachableRDD):
         if self.rdd_type != SPATIAL:
             raise ValueError("Only TiledRasterRDDs with a rdd_type of Spatial can use stitch()")
 
-        tup = self.srdd.stitch()
-        ser = self.geopysc.create_value_serializer(tup._2(), TILE)
-        return ser.loads(tup._1())[0]
+        value = self.srdd.stitch()
+        ser = ProtoBufSerializer.create_value_serializer(TILE)
+        return ser.loads(value)[0]
 
     def mask(self, geometries):
         """Masks the ``TiledRasterRDD`` so that only values that intersect the geometries will

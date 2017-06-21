@@ -5,6 +5,7 @@ import json
 from collections import namedtuple
 from urllib.parse import urlparse
 
+from geopyspark.geotrellis.protobufcodecs import multibandtile_decoder
 from geopyspark.geotrellis import Metadata, Extent
 from geopyspark.geotrellis.rdd import TiledRasterRDD
 from geopyspark.geotrellis.constants import TILE, ZORDER, SPATIAL
@@ -110,7 +111,7 @@ def _construct_catalog(geopysc, new_uri, options):
                                                   split_parameters[2])
 
         else:
-            raise ValueError("Cannot find Attribute Store for, {}".format(backend))
+            raise ValueError("Cannot find Attribute Store for", backend)
 
         _mapped_cached[new_uri] = _cached(store=store,
                                           reader=reader,
@@ -144,7 +145,7 @@ def read_layer_metadata(geopysc,
     """Reads the metadata from a saved layer without reading in the whole layer.
 
     Args:
-        geopysc (:cls:`~geopyspark.GeoPyContext`): The ``GeoPyContext`` being used this session.
+        geopysc (:class:`~geopyspark.GeoPyContext`): The ``GeoPyContext`` being used this session.
         rdd_type (str): What the spatial type of the geotiffs are. This is
             represented by the constants: ``SPATIAL`` and ``SPACETIME``.
         uri (str): The Uniform Resource Identifier used to point towards the desired GeoTrellis
@@ -187,7 +188,7 @@ def get_layer_ids(geopysc,
     name and zoom of a given layer.
 
     Args:
-        geopysc (:cls:`~geopyspark.GeoPyContext`): The ``GeoPyContext`` being used this session.
+        geopysc (:class:`~geopyspark.GeoPyContext`): The ``GeoPyContext`` being used this session.
         uri (str): The Uniform Resource Identifier used to point towards the desired GeoTrellis
             catalog to be read from. The shape of this string varies depending on backend.
         options (dict, optional): Additional parameters for reading the layer for specific backends.
@@ -232,7 +233,7 @@ def read(geopysc,
         use :func:`query` instead.
 
     Args:
-        geopysc (:cls:`~geopyspark.GeoPyContext`): The ``GeoPyContext`` being used this session.
+        geopysc (:class:`~geopyspark.GeoPyContext`): The ``GeoPyContext`` being used this session.
         rdd_type (str): What the spatial type of the geotiffs are. This is
             represented by the constants: ``SPATIAL`` and ``SPACETIME``.
         uri (str): The Uniform Resource Identifier used to point towards the desired GeoTrellis
@@ -289,7 +290,7 @@ def read_value(geopysc,
         When requesting a tile that does not exist, ``None`` will be returned.
 
     Args:
-        geopysc (:cls:`~geopyspark.GeoPyContext`): The ``GeoPyContext`` being used this session.
+        geopysc (:class:`~geopyspark.GeoPyContext`): The ``GeoPyContext`` being used this session.
         rdd_type (str): What the spatial type of the geotiffs are. This is
             represented by the constants: ``SPATIAL`` and ``SPACETIME``.
         uri (str): The Uniform Resource Identifier used to point towards the desired GeoTrellis
@@ -321,7 +322,9 @@ def read_value(geopysc,
         else:
             options = {}
 
-        _construct_catalog(geopysc, uri, options)
+        if uri not in _mapped_cached:
+            _construct_catalog(geopysc, uri, options)
+
         cached = _mapped_cached[uri]
 
         if not zdt:
@@ -329,19 +332,14 @@ def read_value(geopysc,
 
         key = geopysc.map_key_input(rdd_type, True)
 
-        tup = cached.value_reader.readTile(key,
-                                           layer_name,
-                                           layer_zoom,
-                                           col,
-                                           row,
-                                           zdt)
+        values = cached.value_reader.readTile(key,
+                                              layer_name,
+                                              layer_zoom,
+                                              col,
+                                              row,
+                                              zdt)
 
-        ser = geopysc.create_value_serializer(tup._2(), TILE)
-
-        if uri not in _mapped_serializers:
-            _mapped_serializers[uri] = ser
-
-        return ser.loads(tup._1())[0]
+        return multibandtile_decoder(values)
 
 def query(geopysc,
           rdd_type,
@@ -364,7 +362,7 @@ def query(geopysc,
         been set, or if the querried region contains the entire layer.
 
     Args:
-        geopysc (:cls:`~geopyspark.GeoPyContext`): The ``GeoPyContext`` being used this session.
+        geopysc (:class:`~geopyspark.GeoPyContext`): The ``GeoPyContext`` being used this session.
         rdd_type (str): What the spatial type of the geotiffs are. This is
             represented by the constants: ``SPATIAL`` and ``SPACETIME``. Note: All of the
             GeoTiffs must have the same saptial type.

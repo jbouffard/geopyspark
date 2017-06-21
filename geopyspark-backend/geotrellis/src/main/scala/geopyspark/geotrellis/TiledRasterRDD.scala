@@ -1,6 +1,10 @@
 package geopyspark.geotrellis
 
+import geopyspark.geotrellis._
 import geopyspark.geotrellis.GeoTrellisUtils._
+
+import protos.tileMessages._
+import protos.tupleMessages._
 
 import geotrellis.proj4._
 import geotrellis.raster._
@@ -12,7 +16,6 @@ import geotrellis.raster.resample.ResampleMethod
 import geotrellis.spark._
 import geotrellis.spark.costdistance.IterativeCostDistance
 import geotrellis.spark.io._
-import geotrellis.spark.io.avro._
 import geotrellis.spark.io.json._
 import geotrellis.spark.mapalgebra.local._
 import geotrellis.spark.mapalgebra.focal._
@@ -43,7 +46,7 @@ import scala.reflect._
 import scala.collection.JavaConverters._
 
 
-abstract class TiledRasterRDD[K: SpatialComponent: AvroRecordCodec: JsonFormat: ClassTag] extends TileRDD[K] {
+abstract class TiledRasterRDD[K: SpatialComponent: JsonFormat: ClassTag] extends TileRDD[K] {
   import Constants._
 
   type keyType = K
@@ -61,7 +64,7 @@ abstract class TiledRasterRDD[K: SpatialComponent: AvroRecordCodec: JsonFormat: 
     }
 
   /** Encode RDD as Avro bytes and return it with avro schema used */
-  def toAvroRDD(): (JavaRDD[Array[Byte]], String) = PythonTranslator.toPython(rdd)
+  def toProtoRDD(): JavaRDD[Array[Byte]]
 
   def layerMetadata: String = rdd.metadata.toJson.prettyPrint
 
@@ -305,9 +308,9 @@ class SpatialTiledRasterRDD(
   def lookup(
     col: Int,
     row: Int
-  ): (java.util.ArrayList[Array[Byte]], String) = {
+  ): java.util.ArrayList[Array[Byte]] = {
     val tiles = rdd.lookup(SpatialKey(col, row))
-    PythonTranslator.toPython(tiles)
+    PythonTranslator.toPython[MultibandTile, ProtoMultibandTile](tiles)
   }
 
   def reproject(
@@ -404,13 +407,13 @@ class SpatialTiledRasterRDD(
     SpatialTiledRasterRDD(zoomLevel, multiBand)
   }
 
-  def stitch: (Array[Byte], String) = {
+  def stitch: Array[Byte] = {
     val contextRDD = ContextRDD(
       rdd.mapValues({ v => v.band(0) }),
       rdd.metadata
     )
 
-    PythonTranslator.toPython(contextRDD.stitch.tile)
+    PythonTranslator.toPython[Tile, ProtoTile](contextRDD.stitch.tile)
   }
 
   def costDistance(
@@ -470,6 +473,9 @@ class SpatialTiledRasterRDD(
 
   def toDouble(converted: RDD[(SpatialKey, MultibandTile)]): TiledRasterRDD[SpatialKey] =
     SpatialTiledRasterRDD(zoomLevel, MultibandTileLayerRDD(converted, rdd.metadata))
+
+  def toProtoRDD(): JavaRDD[Array[Byte]] =
+    PythonTranslator.toPython[(SpatialKey, MultibandTile), ProtoTuple](rdd)
 }
 
 
@@ -638,17 +644,20 @@ class TemporalTiledRasterRDD(
 
   def toDouble(converted: RDD[(SpaceTimeKey, MultibandTile)]): TiledRasterRDD[SpaceTimeKey] =
     TemporalTiledRasterRDD(zoomLevel, MultibandTileLayerRDD(converted, rdd.metadata))
+
+  def toProtoRDD(): JavaRDD[Array[Byte]] =
+    PythonTranslator.toPython[(SpaceTimeKey, MultibandTile), ProtoTuple](rdd)
 }
 
 
 object SpatialTiledRasterRDD {
-  def fromAvroEncodedRDD(
+  def fromProtoEncodedRDD(
     javaRDD: JavaRDD[Array[Byte]],
-    schema: String,
     metadata: String
   ): SpatialTiledRasterRDD = {
     val md = metadata.parseJson.convertTo[TileLayerMetadata[SpatialKey]]
-    val tileLayer = MultibandTileLayerRDD(PythonTranslator.fromPython[(SpatialKey, MultibandTile)](javaRDD, Some(schema)), md)
+    val tileLayer = MultibandTileLayerRDD(
+      PythonTranslator.fromPython[(SpatialKey, MultibandTile), ProtoTuple](javaRDD, ProtoTuple.parseFrom), md)
 
     SpatialTiledRasterRDD(None, tileLayer)
   }
@@ -737,13 +746,13 @@ object SpatialTiledRasterRDD {
 }
 
 object TemporalTiledRasterRDD {
-  def fromAvroEncodedRDD(
+  def fromProtoEncodedRDD(
     javaRDD: JavaRDD[Array[Byte]],
-    schema: String,
     metadata: String
   ): TemporalTiledRasterRDD = {
     val md = metadata.parseJson.convertTo[TileLayerMetadata[SpaceTimeKey]]
-    val tileLayer = MultibandTileLayerRDD(PythonTranslator.fromPython[(SpaceTimeKey, MultibandTile)](javaRDD, Some(schema)), md)
+    val tileLayer = MultibandTileLayerRDD(
+      PythonTranslator.fromPython[(SpaceTimeKey, MultibandTile), ProtoTuple](javaRDD, ProtoTuple.parseFrom), md)
 
     TemporalTiledRasterRDD(None, tileLayer)
   }
