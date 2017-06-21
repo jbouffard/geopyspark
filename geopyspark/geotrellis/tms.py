@@ -58,6 +58,7 @@ class TMSServer(object):
         self.pysc = pysc
         self.server = server
         self.handshake = ''
+        self.pysc._gateway.start_callback_server()
 
     def set_handshake(self, handshake):
         self.server.set_handshake(handshake)
