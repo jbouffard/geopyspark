@@ -149,9 +149,9 @@ abstract class TiledRasterRDD[K: SpatialComponent: AvroRecordCodec: JsonFormat: 
   ): TiledRasterRDD[K]
 
   def hillshade(sc: SparkContext,
-                azimuth: Double, 
-                altitude: Double, 
-                zFactor: Double, 
+                azimuth: Double,
+                altitude: Double,
+                zFactor: Double,
                 band: Int
   ): TiledRasterRDD[K]
 
@@ -438,10 +438,10 @@ class SpatialTiledRasterRDD(
   }
 
   def hillshade(
-    sc: SparkContext, 
-    azimuth: Double, 
-    altitude: Double, 
-    zFactor: Double, 
+    sc: SparkContext,
+    azimuth: Double,
+    altitude: Double,
+    zFactor: Double,
     band: Int
   ): TiledRasterRDD[SpatialKey] = {
     val tileLayer = TileLayerRDD(rdd.mapValues(_.band(band)), rdd.metadata)
@@ -450,7 +450,7 @@ class SpatialTiledRasterRDD(
 
     val result = tileLayer.hillshade(azimuth, altitude, zFactor)
 
-    val multibandRDD: MultibandTileLayerRDD[SpatialKey] = 
+    val multibandRDD: MultibandTileLayerRDD[SpatialKey] =
       MultibandTileLayerRDD(result.mapValues{ tile => MultibandTile(tile) }, result.metadata)
 
     SpatialTiledRasterRDD(None, multibandRDD)
@@ -618,7 +618,7 @@ class TemporalTiledRasterRDD(
 
     val result = tileLayer.hillshade(azimuth, altitude, zFactor)
 
-    val multibandRDD: MultibandTileLayerRDD[SpaceTimeKey] = 
+    val multibandRDD: MultibandTileLayerRDD[SpaceTimeKey] =
       MultibandTileLayerRDD(result.mapValues(MultibandTile(_)), result.metadata)
 
     TemporalTiledRasterRDD(None, multibandRDD)
