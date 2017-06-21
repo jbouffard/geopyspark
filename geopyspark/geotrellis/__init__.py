@@ -348,16 +348,17 @@ class Metadata(object):
 
 
 from geopyspark.geotrellis.constants import SPATIAL, SPACETIME, ZOOM
+from geopyspark.geotrellis.color import ColorMap
 from geopyspark.geotrellis.protobufserializer import ProtoBufSerializer
 from geopyspark.geotrellis.neighborhoods import (Square, Circle,
                                                  Nesw, Wedge, Annulus)
-from geopyspark.geotrellis.rdd import RasterRDD, TiledRasterRDD
+from geopyspark.geotrellis.rdd import RasterRDD, TiledRasterRDD, Pyramid
 from geopyspark.geotrellis.render import PngRDD
 
 
 __all__ = ["Extent", "ProjectedExtent", "TemporalProjectedExtent",
            "TileLayout", "LayoutDefinition", "SpatialKey",
            "SpaceTimeKey", "Bounds", "Metadata", "RasterRDD",
-           "TiledRasterRDD", "PngRDD", "ProtoBufSerializer",
-           "Square", "Circle", "Nesw", "Wedge", "Annulus",
-           "SPATIAL", "SPACETIME", "ZOOM"]
+           "TiledRasterRDD", "Pyramid", "PngRDD", "ColorMap",
+           "ProtoBufSerializer", "Square", "Circle", "Nesw",
+           "Wedge", "Annulus", "SPATIAL", "SPACETIME", "ZOOM"]
