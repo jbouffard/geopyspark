@@ -5,6 +5,9 @@ import json
 from collections import namedtuple
 from urllib.parse import urlparse
 
+from geopyspark.geopyspark_utils import check_environment
+
+check_environment()
 from geopyspark import map_key_input
 from geopyspark.geotrellis.protobufcodecs import multibandtile_decoder
 from geopyspark.geotrellis import Metadata, Extent
