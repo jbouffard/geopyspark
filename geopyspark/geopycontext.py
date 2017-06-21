@@ -1,11 +1,14 @@
 """A wrapper for ``SparkContext`` that provides extra functionality for GeoPySpark."""
 from geopyspark.geotrellis.protobufserializer import ProtoBufSerializer
 from geopyspark.geopyspark_utils import check_environment
+import geopyspark.geotrellis.converters
+
 check_environment()
 
 from pyspark import RDD, SparkContext
 from pyspark.serializers import AutoBatchedSerializer
 
+from py4j.java_gateway import java_import
 
 class GeoPyContext(object):
     """A wrapper of ``SparkContext``.
@@ -54,6 +57,10 @@ class GeoPyContext(object):
 
         self.sc = self.pysc._jsc.sc()
         self._jvm = self.pysc._gateway.jvm
+        self.pysc._gateway.start_callback_server()
+
+        self.avroregistry = AvroRegistry()
+        java_import(self._jvm, 'geopyspark.geotrellis.SpatialTiledRasterRDD')
 
     @staticmethod
     def map_key_input(key_type, is_boundable):

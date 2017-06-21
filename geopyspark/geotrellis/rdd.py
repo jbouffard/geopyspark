@@ -5,6 +5,7 @@ when performing operations.
 '''
 import json
 import shapely.wkt
+import shapely.wkb
 from geopyspark.geotrellis.protobufcodecs import multibandtile_decoder
 from geopyspark.geotrellis.protobufserializer import ProtoBufSerializer
 from geopyspark.geopyspark_utils import check_environment
@@ -30,6 +31,28 @@ from geopyspark.geotrellis.constants import (RESAMPLE_METHODS,
                                             )
 from geopyspark.geotrellis.neighborhoods import Neighborhood
 
+
+def rasterize(geopysc, geoms, crs, zoom, fill_value, cell_type='float64', options=None, numPartitions=None):
+    """Rasterizes a Shapely geometries.
+
+    Args:
+        geopysc (:class:`~geopyspark.GeoPyContext`): The ``GeoPyContext`` instance.
+        geoms (shapely.geometry): List of geometries to rasterize.
+        crs (str or int): The CRS of the input geometry.
+        zoom (int): The zoom level of the output raster.
+        fill_value: Value to burn into pixels intersectiong geometry
+        cell_type (str): The string representation of the ``CellType`` to convert to.
+        options (:class:`~geopyspark.geotrellis.RasterizerOptions`): Pixel intersection options.
+
+    Returns:
+        :class:`~geopyspark.geotrellis.rdd.TiledRasterRDD`
+    """
+    if isinstance(crs, int):
+        crs = str(crs)
+
+    wkb_geoms = [shapely.wkb.dumps(g) for g in geoms]
+    srdd = geopysc._jvm.SpatialTiledRasterRDD.rasterizeGeometry(geopysc.sc, wkb_geoms, crs, zoom, float(fill_value), cell_type, options, numPartitions)
+    return TiledRasterRDD(geopysc, SPATIAL, srdd)
 
 def _reclassify(srdd, value_map, data_type, boundary_strategy, replace_nodata_with):
     new_dict = {}
@@ -478,63 +501,6 @@ class TiledRasterRDD(CachableRDD):
         return cls(geopysc, rdd_type, srdd)
 
     @classmethod
-    def rasterize(cls, geopysc, rdd_type, geometry, extent, crs, cols, rows,
-                  fill_value, instant=None):
-        """Creates a ``TiledRasterRDD`` from a shapely geomety.
-
-        Args:
-            geopysc (:class:`~geopyspark.GeoPyContext`): The ``GeoPyContext`` being used this session.
-            rdd_type (str): What the spatial type of the geotiffs are. This is
-                represented by the constants: ``SPATIAL`` and ``SPACETIME``.
-            geometry (str or shapely.geometry.Polygon): The value to be turned into a raster. Can
-                either be a string or a ``Polygon``. If the value is a string, it must be the WKT
-                string, geometry format.
-            extent (:class:`~geopyspark.geotrellis.Extent`): The ``extent`` of the new raster.
-            crs (str or int): The CRS the new raster should be in.
-            cols (int): The number of cols the new raster should have.
-            rows (int): The number of rows the new raster should have.
-            fill_value (int): The value to fill the raster with.
-
-                Note:
-                    Only the area the raster intersects with the ``extent`` will have this value.
-                    Any other area will be filled with GeoTrellis' NoData value for ``int`` which
-                    is represented in GeoPySpark as the constant, ``NODATAINT``.
-            instant(int, optional): Optional if the data has no time component (ie is ``SPATIAL``).
-                Otherwise, it is requires and represents the time stamp of the data.
-
-        Returns:
-            :class:`~geopyspark.geotrellis.rdd.TiledRasterRDD`
-
-        Raises:
-            TypeError: If ``geometry`` is not a ``str`` or a Polygon; or if there was a
-                mistach in inputs like setting the ``rdd_type`` as ``SPATIAL`` but also setting
-                ``instant``.
-        """
-
-        if not isinstance(geometry, str):
-            try:
-                geometry = dumps(geometry)
-            except:
-                raise TypeError(geometry, "Needs to be either a Shapely Geometry or a string")
-
-        if not isinstance(extent, dict):
-            extent = extent._asdict()
-
-        if isinstance(crs, int):
-            crs = str(crs)
-
-        if instant and rdd_type != SPATIAL:
-            srdd = geopysc._jvm.geopyspark.geotrellis.TemporalTiledRasterRDD.rasterize(
-                geopysc.sc, geometry, extent, crs, instant, cols, rows, fill_value)
-        elif not instant and rdd_type == SPATIAL:
-            srdd = geopysc._jvm.geopyspark.geotrellis.SpatialTiledRasterRDD.rasterize(
-                geopysc.sc, geometry, extent, crs, cols, rows, fill_value)
-        else:
-            raise TypeError("Abiguous inputs. Given ", instant, " but rdd_type is SPATIAL")
-
-        return cls(geopysc, rdd_type, srdd)
-
-    @classmethod
     def euclidean_distance(cls, geopysc, geometry, source_crs, zoom, cellType='float64'):
         """Calculates the Euclidean distance of a Shapely geometry.
 
@@ -739,7 +705,7 @@ class TiledRasterRDD(CachableRDD):
 
         result = self.srdd.pyramid(start_zoom, end_zoom, resample_method)
 
-        return [TiledRasterRDD(self.geopysc, self.rdd_type, srdd) for srdd in result]
+        return Pyramid([TiledRasterRDD(self.geopysc, self.rdd_type, srdd) for srdd in result])
 
     def focal(self, operation, neighborhood=None, param_1=None, param_2=None, param_3=None):
         """Performs the given focal operation on the layers contained in the RDD.
@@ -1051,7 +1017,7 @@ class TiledRasterRDD(CachableRDD):
     def is_floating_point_layer(self):
         """Determines whether the content of the TiledRasterRDD is of floating point type.
 
-        Args: 
+        Args:
             None
 
         Returns:
@@ -1115,3 +1081,97 @@ class TiledRasterRDD(CachableRDD):
 
     def __rtruediv__(self, value):
         return self._process_operation(value, self.srdd.reverseLocalDivide)
+
+
+def _common_entries(*dcts):
+    """Zip two dictionaries together by keys"""
+    for i in set(dcts[0]).intersection(*dcts[1:]):
+        yield (i,) + tuple(d[i] for d in dcts)
+
+# Keep it in non rendered form so we can do map algebra operations to it
+class Pyramid(CachableRDD):
+    def __init__(self, levels):
+        """List of TiledRasterRDDs into a coherent pyramid tile pyramid.
+
+        Args:
+            levels (list): A list of TiledRasterRDD.
+
+        """
+
+        if isinstance(levels, dict):
+            levels = levels
+        elif isinstance(levels, list):
+            levels = dict([(l.zoom_level, l) for l in levels])
+        else:
+            raise TypeError("levels are neither list or dictionary")
+
+        self.levels = levels
+        self.max_zoom = max(self.levels.keys())
+        self.geopysc = levels[self.max_zoom].geopysc
+        self.rdd_type = levels[self.max_zoom].rdd_type
+        self.is_cached = False
+        self.histogram = None
+
+    def wrapped_rdds(self):
+        return [rdd.srdd for rdd in self.levels.values()]
+
+    def get_histogram(self):
+        if not self.histogram:
+            self.histogram = self.levels[self.max_zoom].get_histogram()
+        return self.histogram
+
+    def to_png_pyramid(self, color_ramp=None, color_map=None, num_breaks=10):
+        if not color_map and color_ramp:
+            hist = self.get_histogram()
+            breaks = hist.quantileBreaks(num_breaks)
+            color_map = self.geopysc._jvm.geopyspark.geotrellis.Coloring.makeColorMap(breaks, color_ramp)
+
+        return PngRDD(self.levels, color_map)
+
+    def __add__(self, value):
+        if isinstance(value, Pyramid):
+            return Pyramid({k: l.__add__(r) for k, l, r in _common_entries(self.levels, value.levels)})
+        else:
+            return Pyramid({k: l.__add__(value) for k, l in self.levels.items()})
+
+    def __radd__(self, value):
+        if isinstance(value, Pyramid):
+            return Pyramid({k: l.__radd__(r) for k, l, r in _common_entries(self.levels, value.levels)})
+        else:
+            return Pyramid({k: l.__radd__(value) for k, l in self.levels.items()})
+
+    def __sub__(self, value):
+        if isinstance(value, Pyramid):
+            return Pyramid({k: l.__sub__(r) for k, l, r in _common_entries(self.levels, value.levels)})
+        else:
+            return Pyramid({k: l.__sub__(value) for k, l in self.levels.items()})
+
+    def __rsub__(self, value):
+        if isinstance(value, Pyramid):
+            return Pyramid({k: l.__rsub__(r) for k, l, r in _common_entries(self.levels, value.levels)})
+        else:
+            return Pyramid({k: l.__rsub__(value) for k, l in self.levels.items()})
+
+    def __mul__(self, value):
+        if isinstance(value, Pyramid):
+            return Pyramid({k: l.__mul__(r) for k, l, r in _common_entries(self.levels, value.levels)})
+        else:
+            return Pyramid({k: l.__mul__(value) for k, l in self.levels.items()})
+
+    def __rmul__(self, value):
+        if isinstance(value, Pyramid):
+            return Pyramid({k: l.__rmul__(r) for k, l, r in _common_entries(self.levels, value.levels)})
+        else:
+            return Pyramid({k: l.__rmul__(value) for k, l in self.levels.items()})
+
+    def __truediv__(self, value):
+        if isinstance(value, Pyramid):
+            return Pyramid({k: l.__truediv__(r) for k, l, r in _common_entries(self.levels, value.levels)})
+        else:
+            return Pyramid({k: l.__truediv__(value) for k, l in self.levels.items()})
+
+    def __rtruediv__(self, value):
+        if isinstance(value, Pyramid):
+            return Pyramid({k: l.__rtruediv__(r) for k, l, r in _common_entries(self.levels, value.levels)})
+        else:
+            return Pyramid({k: l.__rtruediv__(value) for k, l in self.levels.items()})
