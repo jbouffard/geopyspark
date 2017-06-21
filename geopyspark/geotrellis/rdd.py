@@ -35,7 +35,7 @@ def rasterize(pysc, geoms, crs, zoom, fill_value, cell_type='float64', options=N
     """Rasterizes a Shapely geometries.
 
     Args:
-        pysc (:class:`~geopyspark.GeoPyContext`): The ``GeoPyContext`` instance.
+        pysc (pyspark.context.SparkContext): The ``SparkContext`` being used this session.
         geoms (shapely.geometry): List of geometries to rasterize.
         crs (str or int): The CRS of the input geometry.
         zoom (int): The zoom level of the output raster.
@@ -88,7 +88,7 @@ class CachableRDD(object):
     Base class for class that wraps a Scala RDD instance through a py4j reference.
 
     Attributes:
-        pysc (:class:`~geopyspark.GeoPyContext`): The ``GeoPyContext`` being used this session.
+        pysc (pyspark.context.SparkContext): The ``SparkContext`` being used this session.
         srdd (py4j.java_gateway.JavaObject): The coresponding Scala RDD class.
     """
 
@@ -149,14 +149,14 @@ class RasterRDD(CachableRDD):
     modified to fit a certain layout. See :ref:`raster_rdd` for more information.
 
     Args:
-        pysc (:class:`~geopyspark.GeoPyContext`): The ``GeoPyContext`` being used this session.
+        pysc (pyspark.context.SparkContext): The ``SparkContext`` being used this session.
         rdd_type (str): What the spatial type of the geotiffs are. This is
             represented by the constants: ``SPATIAL`` and ``SPACETIME``.
         srdd (py4j.java_gateway.JavaObject): The coresponding Scala class. This is what allows
             ``RasterRDD`` to access the various Scala methods.
 
     Attributes:
-        pysc (:class:`~geopyspark.GeoPyContext`): The ``GeoPyContext`` being used this session.
+        pysc (pyspark.context.SparkContext): The ``SparkContext`` being used this session.
         rdd_type (str): What the spatial type of the geotiffs are. This is
             represented by the constants: ``SPATIAL`` and ``SPACETIME``.
         srdd (py4j.java_gateway.JavaObject): The coresponding Scala class. This is what allows
@@ -176,8 +176,7 @@ class RasterRDD(CachableRDD):
         """Create a ``RasterRDD`` from a numpy RDD.
 
         Args:
-            pysc (:class:`~geopyspark.GeoPyContext`): The ``GeoPyContext`` being used this
-                session.
+            pysc (pyspark.context.SparkContext): The ``SparkContext`` being used this session.
             rdd_type (str): What the spatial type of the geotiffs are. This is
                 represented by the constants: ``SPATIAL`` and ``SPACETIME``.
             numpy_rdd (pyspark.RDD): A PySpark RDD that contains tuples of either
@@ -437,14 +436,14 @@ class TiledRasterRDD(CachableRDD):
     a larger layout. For more information, see :ref:`tiled-raster-rdd`.
 
     Args:
-        pysc (:class:`~geopyspark.GeoPyContext`): The ``GeoPyContext`` being used this session.
+        pysc (pyspark.context.SparkContext): The ``SparkContext`` being used this session.
         rdd_type (str): What the spatial type of the geotiffs are. This is represented by the
             constants: ``SPATIAL`` and ``SPACETIME``.
         srdd (py4j.java_gateway.JavaObject): The coresponding Scala class. This is what allows
             ``TiledRasterRDD`` to access the various Scala methods.
 
     Attributes:
-        pysc (:class:`~geopyspark.GeoPyContext`): The ``GeoPyContext`` being used this session.
+        pysc (pyspark.context.SparkContext): The ``SparkContext`` being used this session.
         rdd_type (str): What the spatial type of the geotiffs are. This is represented by the
             constants: ``SPATIAL` and ``SPACETIME``.
         srdd (py4j.java_gateway.JavaObject): The coresponding Scala class. This is what allows
@@ -474,8 +473,7 @@ class TiledRasterRDD(CachableRDD):
         """Create a ``TiledRasterRDD`` from a numpy RDD.
 
         Args:
-            pysc (:class:`~geopyspark.GeoPyContext`): The ``GeoPyContext`` being used this
-                session.
+            pysc (pyspark.context.SparkContext): The ``SparkContext`` being used this session.
             rdd_type (str): What the spatial type of the geotiffs are. This is represented by the
                 constants: ``SPATIAL`` and ``SPACETIME``.
             numpy_rdd (pyspark.RDD): A PySpark RDD that contains tuples of either
@@ -511,8 +509,7 @@ class TiledRasterRDD(CachableRDD):
         """Calculates the Euclidean distance of a Shapely geometry.
 
         Args:
-            pysc (:class:`~geopyspark.GeoPyContext`): The ``GeoPyContext`` being used this
-                session.
+            pysc (pyspark.context.SparkContext): The ``SparkContext`` being used this session.
             geometry (shapely.geometry): The input geometry to compute the Euclidean distance
                 for.
             source_crs (str or int): The CRS of the input geometry.

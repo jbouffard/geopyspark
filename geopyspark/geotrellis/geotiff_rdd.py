@@ -14,7 +14,7 @@ def get(pysc,
     or ``S3``.
 
     Args:
-        pysc (geopyspark.GeoPyContext): The ``GeoPyContext`` being used this session.
+        pysc (pyspark.context.SparkContext): The ``SparkContext`` being used this session.
         rdd_type (str): What the spatial type of the geotiffs are. This is
             represented by the constants: ``SPATIAL`` and ``SPACETIME``.
 
