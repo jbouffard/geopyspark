@@ -26,7 +26,6 @@ import geotrellis.spark.tiling._
 import geotrellis.spark.util._
 import geotrellis.util._
 import geotrellis.vector._
-import geotrellis.vector.io.wkt.WKT
 import geotrellis.vector.io.wkb.WKB
 import geotrellis.vector.triangulation._
 import geotrellis.vector.voronoi._
@@ -68,9 +67,9 @@ abstract class TiledRasterRDD[K: SpatialComponent: JsonFormat: ClassTag] extends
 
   def layerMetadata: String = rdd.metadata.toJson.prettyPrint
 
-  def mask(wkts: java.util.ArrayList[String]): TiledRasterRDD[K] = {
-    val geometries: Seq[MultiPolygon] = wkts
-      .asScala.map({ wkt => WKT.read(wkt) })
+  def mask(wkbs: java.util.ArrayList[Array[Byte]]): TiledRasterRDD[K] = {
+    val geometries: Seq[MultiPolygon] = wkbs
+      .asScala.map({ wkb => WKB.read(wkb) })
       .flatMap({
         case p: Polygon => Some(MultiPolygon(p))
         case m: MultiPolygon => Some(m)
@@ -137,10 +136,10 @@ abstract class TiledRasterRDD[K: SpatialComponent: JsonFormat: ClassTag] extends
 
   def costDistance(
     sc: SparkContext,
-    wkts: java.util.ArrayList[String],
+    wkbs: java.util.ArrayList[Array[Byte]],
     maxDistance: Double
   ): TiledRasterRDD[K] = {
-    val geometries = wkts.asScala.map({ wkt => WKT.read(wkt) })
+    val geometries = wkbs.asScala.map({ wkb => WKB.read(wkb) })
 
     costDistance(sc, geometries, maxDistance)
   }
@@ -248,44 +247,44 @@ abstract class TiledRasterRDD[K: SpatialComponent: JsonFormat: ClassTag] extends
     rdd.metadata
   )
 
-  def polygonalMin(geom: String): Int =
-    WKT.read(geom) match {
+  def polygonalMin(geom: Array[Byte]): Int =
+    WKB.read(geom) match {
       case poly: Polygon => singleTileLayerRDD.polygonalMin(poly)
       case multi: MultiPolygon => singleTileLayerRDD.polygonalMin(multi)
     }
 
-  def polygonalMinDouble(geom: String): Double =
-    WKT.read(geom) match {
+  def polygonalMinDouble(geom: Array[Byte]): Double =
+    WKB.read(geom) match {
       case poly: Polygon => singleTileLayerRDD.polygonalMinDouble(poly)
       case multi: MultiPolygon => singleTileLayerRDD.polygonalMinDouble(multi)
     }
 
-  def polygonalMax(geom: String): Int =
-    WKT.read(geom) match {
+  def polygonalMax(geom: Array[Byte]): Int =
+    WKB.read(geom) match {
       case poly: Polygon => singleTileLayerRDD.polygonalMax(poly)
       case multi: MultiPolygon => singleTileLayerRDD.polygonalMax(multi)
     }
 
-  def polygonalMaxDouble(geom: String): Double =
-    WKT.read(geom) match {
+  def polygonalMaxDouble(geom: Array[Byte]): Double =
+    WKB.read(geom) match {
       case poly: Polygon => singleTileLayerRDD.polygonalMaxDouble(poly)
       case multi: MultiPolygon => singleTileLayerRDD.polygonalMaxDouble(multi)
     }
 
-  def polygonalMean(geom: String): Double =
-    WKT.read(geom) match {
+  def polygonalMean(geom: Array[Byte]): Double =
+    WKB.read(geom) match {
       case poly: Polygon => singleTileLayerRDD.polygonalMean(poly)
       case multi: MultiPolygon => singleTileLayerRDD.polygonalMean(multi)
     }
 
-  def polygonalSum(geom: String): Long =
-    WKT.read(geom) match {
+  def polygonalSum(geom: Array[Byte]): Long =
+    WKB.read(geom) match {
       case poly: Polygon => singleTileLayerRDD.polygonalSum(poly)
       case multi: MultiPolygon => singleTileLayerRDD.polygonalSum(multi)
     }
 
-  def polygonalSumDouble(geom: String): Double =
-    WKT.read(geom) match {
+  def polygonalSumDouble(geom: Array[Byte]): Double =
+    WKB.read(geom) match {
       case poly: Polygon => singleTileLayerRDD.polygonalSumDouble(poly)
       case multi: MultiPolygon => singleTileLayerRDD.polygonalSumDouble(multi)
     }
@@ -694,9 +693,9 @@ object SpatialTiledRasterRDD {
       MultibandTileLayerRDD(tiles.mapValues(MultibandTile(_)), metadata))
   }
 
-  def euclideanDistance(sc: SparkContext, geomWKT: String, geomCRSStr: String, cellTypeString: String, requestedZoom: Int): TiledRasterRDD[SpatialKey]= {
+  def euclideanDistance(sc: SparkContext, geomWKB: Array[Byte], geomCRSStr: String, cellTypeString: String, requestedZoom: Int): TiledRasterRDD[SpatialKey]= {
     val cellType = CellType.fromName(cellTypeString)
-    val geom = geotrellis.vector.io.wkt.WKT.read(geomWKT)
+    val geom = WKB.read(geomWKB)
     val srcCRS = TileRDD.getCRS(geomCRSStr).get
     val LayoutLevel(z, ld) = ZoomedLayoutScheme(srcCRS).levelForZoom(requestedZoom)
     val maptrans = ld.mapTransform
@@ -765,7 +764,7 @@ object TemporalTiledRasterRDD {
 
   def rasterize(
     sc: SparkContext,
-    geometryString: String,
+    geometryBytes: Array[Byte],
     extent: java.util.Map[String, Double],
     crs: String,
     instant: Int,
@@ -777,7 +776,7 @@ object TemporalTiledRasterRDD {
     val temporalExtent =
       TemporalProjectedExtent(rasterExtent.extent, TileRDD.getCRS(crs).get, instant.toInt)
 
-    val tile = Rasterizer.rasterizeWithValue(WKT.read(geometryString), rasterExtent, fillValue)
+    val tile = Rasterizer.rasterizeWithValue(WKB.read(geometryBytes), rasterExtent, fillValue)
     val rdd = sc.parallelize(Array((temporalExtent, MultibandTile(tile))))
     val tileLayout = TileLayout(1, 1, cols, rows)
     val layoutDefinition = LayoutDefinition(rasterExtent.extent, tileLayout)
