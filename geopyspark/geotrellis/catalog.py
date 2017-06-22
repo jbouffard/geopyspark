@@ -12,6 +12,7 @@ from geopyspark.geotrellis.constants import TILE, ZORDER, SPATIAL
 
 from shapely.geometry import Polygon, MultiPolygon, Point
 from shapely.wkt import dumps
+import shapely.wkb
 
 
 _mapped_cached = {}
@@ -370,19 +371,20 @@ def query(geopysc,
             catalog to be read from. The shape of this string varies depending on backend.
         layer_name (str): The name of the GeoTrellis catalog to be querried.
         layer_zoom (int): The zoom level of the layer that is to be querried.
-        intersects (str or Polygon or :class:`~geopyspark.geotrellis.data_structures.Extent`): The
-            desired spatial area to be returned. Can either be a string, a shapely Polygon, or an
-            instance of ``Extent``. If the value is a string, it must be the WKT string, geometry
-            format.
+        intersects (bytes or shapely.geometry or :class:`~geopyspark.geotrellis.data_structures.Extent`):
+            The desired spatial area to be returned. Can either be a string, a shapely geometry, or
+            instance of ``Extent``, or a WKB verson of the geometry.
 
-            The types of Polygons supported:
+            Note:
+                Not all shapely geometires are supported. The following is are the types that are
+                supported:
                 * Point
                 * Polygon
                 * MultiPolygon
 
             Note:
-                Only layers that were made from spatial, singleband GeoTiffs can query a Point.
-                All other types are restricted to Polygon and MulitPolygon.
+                Only layers that were made from spatial, singleband GeoTiffs can query a ``Point``.
+                All other types are restricted to ``Polygon`` and ``MulitPolygon``.
         time_intervals (list, optional): A list of strings that time intervals to query.
             The strings must be in a valid date-time format. This parameter is only used when
             querying spatial-temporal data. The default value is, None. If None, then only the
@@ -420,14 +422,13 @@ def query(geopysc,
         proj_query = "EPSG:" + str(proj_query)
 
     if numPartitions is None:
-        numPartitions  = geopysc.pysc.defaultMinPartitions
+        numPartitions = geopysc.pysc.defaultMinPartitions
 
-    if isinstance(intersects, Polygon) or isinstance(intersects, MultiPolygon) \
-       or isinstance(intersects, Point):
+    if isinstance(intersects, (Polygon, MultiPolygon, Point)):
         srdd = cached.reader.query(key,
                                    layer_name,
                                    layer_zoom,
-                                   dumps(intersects),
+                                   shapely.wkb.dumps(intersects),
                                    time_intervals,
                                    proj_query,
                                    numPartitions)
@@ -436,12 +437,12 @@ def query(geopysc,
         srdd = cached.reader.query(key,
                                    layer_name,
                                    layer_zoom,
-                                   dumps(intersects.to_poly),
+                                   shapely.wkb.dumps(intersects.to_poly),
                                    time_intervals,
                                    proj_query,
                                    numPartitions)
 
-    elif isinstance(intersects, str):
+    elif isinstance(intersects, bytes):
         srdd = cached.reader.query(key,
                                    layer_name,
                                    layer_zoom,

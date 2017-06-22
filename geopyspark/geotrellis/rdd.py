@@ -4,7 +4,6 @@ wrappers of their Scala counterparts. These will be used in leau of actual PySpa
 when performing operations.
 '''
 import json
-import shapely.wkt
 import shapely.wkb
 from geopyspark.geotrellis.protobufcodecs import multibandtile_decoder
 from geopyspark.geotrellis.protobufserializer import ProtoBufSerializer
@@ -13,7 +12,6 @@ check_environment()
 
 from pyspark.storagelevel import StorageLevel
 from shapely.geometry import Polygon, MultiPolygon
-from shapely.wkt import dumps
 from geopyspark.geotrellis import Metadata
 from geopyspark.geotrellis.constants import (RESAMPLE_METHODS,
                                              OPERATIONS,
@@ -37,7 +35,7 @@ def rasterize(geopysc, geoms, crs, zoom, fill_value, cell_type='float64', option
 
     Args:
         geopysc (:class:`~geopyspark.GeoPyContext`): The ``GeoPyContext`` instance.
-        geoms (shapely.geometry): List of geometries to rasterize.
+        geoms ([shapely.geometry]): List of shapely geometries to rasterize.
         crs (str or int): The CRS of the input geometry.
         zoom (int): The zoom level of the output raster.
         fill_value: Value to burn into pixels intersectiong geometry
@@ -523,7 +521,11 @@ class TiledRasterRDD(CachableRDD):
         if isinstance(source_crs, int):
             source_crs = str(source_crs)
 
-        srdd = geopysc._jvm.geopyspark.geotrellis.SpatialTiledRasterRDD.euclideanDistance(geopysc.sc, dumps(geometry), source_crs, cellType, zoom)
+        srdd = geopysc._jvm.geopyspark.geotrellis.SpatialTiledRasterRDD.euclideanDistance(geopysc.sc,
+                                                                                          shapely.wkb.dumps(geometry),
+                                                                                          source_crs,
+                                                                                          cellType,
+                                                                                          zoom)
         return cls(geopysc, SPATIAL, srdd)
 
     def to_numpy_rdd(self):
@@ -824,8 +826,8 @@ class TiledRasterRDD(CachableRDD):
         be available.
 
         Args:
-            geometries (list):
-                A list of shapely geometries to use as masks.
+            geometries (shapely.geometry or [shapely.geometry]): Either a list of, or a single
+                shapely geometry/ies to use for the mask/s.
 
                 Note:
                     All geometries must be in the same CRS as the TileLayer.
@@ -836,8 +838,8 @@ class TiledRasterRDD(CachableRDD):
 
         if not isinstance(geometries, list):
             geometries = [geometries]
-        wkts = [shapely.wkt.dumps(g) for g in geometries]
-        srdd = self.srdd.mask(wkts)
+        wkbs = [shapely.wkb.dumps(g) for g in geometries]
+        srdd = self.srdd.mask(wkbs)
 
         return TiledRasterRDD(self.geopysc, self.rdd_type, srdd)
 
@@ -857,8 +859,8 @@ class TiledRasterRDD(CachableRDD):
             :class:`~geopyspark.geotrellis.rdd.TiledRasterRDD`
         """
 
-        wkts = [shapely.wkt.dumps(g) for g in geometries]
-        srdd = self.srdd.costDistance(self.geopysc.sc, wkts, float(max_distance))
+        wkbs = [shapely.wkb.dumps(g) for g in geometries]
+        srdd = self.srdd.costDistance(self.geopysc.sc, wkbs, float(max_distance))
 
         return TiledRasterRDD(self.geopysc, self.rdd_type, srdd)
 
@@ -943,10 +945,10 @@ class TiledRasterRDD(CachableRDD):
 
     @staticmethod
     def _process_polygonal_summary(geometry, operation):
-        if isinstance(geometry, Polygon) or isinstance(geometry, MultiPolygon):
-            geometry = dumps(geometry)
-        if not isinstance(geometry, str):
-            raise ValueError("geometry must be either a Polygon, MultiPolygon, or a String")
+        if isinstance(geometry, (Polygon, MultiPolygon)):
+            geometry = shapely.wkb.dumps(geometry)
+        if not isinstance(geometry, bytes):
+            raise TypeError("Expected geometry to be bytes but given this instead", type(geometry))
 
         return operation(geometry)
 
@@ -954,9 +956,9 @@ class TiledRasterRDD(CachableRDD):
         """Finds the min value that is contained within the given geometry.
 
         Args:
-            geometry (`shapely.geometry.Polygon` or `shapely.geometry.MultiPolygon` or str): A
+            geometry (shapely.geometry.Polygon or shapely.geometry.MultiPolygon or bytes): A
                 Shapely ``Polygon`` or ``MultiPolygon`` that represents the area where the summary
-                should be computed; or a WKT string representation of the geometry.
+                should be computed; or a WKB representation of the geometry.
             data_type (type): The type of the values within the rasters. Can either be ``int`` or
                 ``float``.
 
@@ -978,9 +980,9 @@ class TiledRasterRDD(CachableRDD):
         """Finds the max value that is contained within the given geometry.
 
         Args:
-            geometry (`shapely.geometry.Polygon` or `shapely.geometry.MultiPolygon` or str): A
+            geometry (shapely.geometry.Polygon or shapely.geometry.MultiPolygon or bytes): A
                 Shapely ``Polygon`` or ``MultiPolygon`` that represents the area where the summary
-                should be computed; or a WKT string representation of the geometry.
+                should be computed; or a WKB representation of the geometry.
             data_type (type): The type of the values within the rasters. Can either be ``int`` or
                 ``float``.
 
@@ -1002,9 +1004,9 @@ class TiledRasterRDD(CachableRDD):
         """Finds the sum of all of the values that are contained within the given geometry.
 
         Args:
-            geometry (`shapely.geometry.Polygon` or `shapely.geometry.MultiPolygon` or str): A
+            geometry (shapely.geometry.Polygon or shapely.geometry.MultiPolygon or bytes): A
                 Shapely ``Polygon`` or ``MultiPolygon`` that represents the area where the summary
-                should be computed; or a WKT string representation of the geometry.
+                should be computed; or a WKB representation of the geometry.
             data_type (type): The type of the values within the rasters. Can either be ``int`` or
                 ``float``.
 
@@ -1026,9 +1028,9 @@ class TiledRasterRDD(CachableRDD):
         """Finds the mean of all of the values that are contained within the given geometry.
 
         Args:
-            geometry (`shapely.geometry.Polygon` or `shapely.geometry.MultiPolygon` or str): A
+            geometry (shapely.geometry.Polygon or shapely.geometry.MultiPolygon or bytes): A
                 Shapely ``Polygon`` or ``MultiPolygon`` that represents the area where the summary
-                should be computed; or a WKT string representation of the geometry.
+                should be computed; or a WKB representation of the geometry.
 
         Returns:
             ``float``
