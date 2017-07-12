@@ -152,6 +152,16 @@ a need for it.
   tutorials/sentinel_tile_server_example
 
 .. toctree::
+  :maxdepth: 3
+  :caption: NoteBooks
+  :glob:
+  :hidden:
+
+  notebook-demos/tiled-raster-layer
+  notebook-demos/raster-layer
+  notebook-demos/ingesting-an-image
+
+.. toctree::
   :maxdepth: 4
   :caption: Docs
   :glob:

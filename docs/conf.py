@@ -29,8 +29,9 @@ if 'SPARK_HOME' not in os.environ.keys():
     os.environ['SPARK_HOME'] = './spark-2.1.1-bin-hadoop2.7/'
 
 jar = 'geotrellis-backend-assembly-0.1.0.jar'
-url = 'https://github.com/locationtech-labs/geopyspark/releases/download/v0.1.0/'
-subprocess.call(['curl', '-L', url+jar, '-o', '../geopyspark/jars/' + jar])
+#url = 'https://github.com/locationtech-labs/geopyspark/releases/download/v0.1.0/'
+#subprocess.call(['curl', '-L', url+jar, '-o', '../geopyspark/jars/' + jar])
+os.environ['GEOPYSPARK_JARS_DIR'] = '../geopyspark/jars/'+jar
 sys.path.insert(0, path.abspath('../'))
 
 
@@ -43,7 +44,8 @@ sys.path.insert(0, path.abspath('../'))
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.napoleon']
+extensions = ['sphinx.ext.autodoc', 'sphinx.ext.napoleon', 'nbsphinx', 'sphinx.ext.mathjax']
+nbsphinx_allow_errors = True
 
 napoleon_google_docstring = True
 
@@ -83,7 +85,7 @@ language = None
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This patterns also effect to html_static_path and html_extra_path
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', '**.ipynb_checkpoints']
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = 'sphinx'
