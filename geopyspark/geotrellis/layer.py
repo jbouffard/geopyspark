@@ -987,6 +987,18 @@ class TiledRasterLayer(CachableLayer):
 
         return Pyramid([TiledRasterLayer(self.pysc, self.layer_type, srdd) for srdd in result])
 
+    def tms_pyramid(self, min_zoom, max_zoom=None, resample_method=ResampleMethod.NEAREST_NEIGHBOR):
+        if max_zoom:
+            max_zoom = max_zoom
+        elif self.zoom_level:
+            max_zoom = self.zoom_level
+        else:
+            raise ValueError("No max_zoom given.")
+
+        result = self.srdd.tmsPyramid(max_zoom, min_zoom, ResampleMethod(resample_method).value)
+
+        return Pyramid([TiledRasterLayer(self.pysc, self.layer_type, srdd) for srdd in result])
+
     def pyramid_non_power_of_two(self, col_power, row_power, end_zoom, start_zoom=None, resample_method=ResampleMethod.NEAREST_NEIGHBOR):
         """Creates a ``Pyramid`` instance. This will work even if the tiles' sizes are not
         multiples of 2.

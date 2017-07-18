@@ -73,6 +73,9 @@ abstract class TiledRasterRDD[K: SpatialComponent: JsonFormat: ClassTag] extends
   /** Encode RDD as Avro bytes and return it with avro schema used */
   def toProtoRDD(): JavaRDD[Array[Byte]]
 
+  def isZoomedLayer(tileSize: Int): Boolean =
+    (tileSize & (tileSize - 1)) == 0
+
   def resample_to_power_of_two(
     col_power: Int,
     row_power: Int,
@@ -135,6 +138,20 @@ abstract class TiledRasterRDD[K: SpatialComponent: JsonFormat: ClassTag] extends
   ): TiledRasterRDD[K]
 
   def pyramid(
+    baseRDD: RDD[(K, MultibandTile)] with Metadata[TileLayerMetadata[K]],
+    startZoom: Int,
+    endZoom: Int,
+    resampleMethod: ResampleMethod,
+    scheme: LayoutScheme
+  ): Array[_]
+
+  def pyramid(
+    startZoom: Int,
+    endZoom: Int,
+    resampleMethod: String
+  ): Array[_] // Array[TiledRasterRDD[K]]
+
+  def tmsPyramid(
     startZoom: Int,
     endZoom: Int,
     resampleMethod: String
@@ -376,23 +393,49 @@ class SpatialTiledRasterRDD(
     resampleMethod: String
   ): TiledRasterRDD[SpatialKey] = {
     val method: ResampleMethod = TileRDD.getResampleMethod(resampleMethod)
-    val mapKeyTransform =
-      MapKeyTransform(
-        layoutDefinition.extent,
-        layoutDefinition.layoutCols,
-        layoutDefinition.layoutRows)
+    val mapKeyTransform = layoutDefinition.mapTransform
 
     val crs = rdd.metadata.crs
-    val projectedRDD = rdd.map{ x => (ProjectedExtent(mapKeyTransform(x._1), crs), x._2) }
+    val projectedRDD =
+      rdd.map{ x => (ProjectedExtent(mapKeyTransform(x._1), crs), x._2) }
+
     val retiledLayerMetadata = rdd.metadata.copy(
       layout = layoutDefinition,
       bounds = KeyBounds(mapKeyTransform(rdd.metadata.extent))
     )
+    //println(s"This is the extent of the new Metadata ${retiledLayerMetadata.layout.layoutCols}")
+    //println(s"This is the tile layout of the new Metadata ${retiledLayerMetadata.layout}")
+    //println("\n\n")
 
     val tileLayer =
       MultibandTileLayerRDD(projectedRDD.tileToLayout(retiledLayerMetadata, method), retiledLayerMetadata)
 
+    //println(s"This is the extent of the new RDD ${tileLayer.metadata.layout.layoutCols}")
+    //println(s"This is the tile layout of the new RDD ${tileLayer.metadata.layout}")
+    //println("\n\n")
+
     SpatialTiledRasterRDD(None, tileLayer)
+  }
+
+  def pyramid(
+    baseRDD: RDD[(SpatialKey, MultibandTile)] with Metadata[TileLayerMetadata[SpatialKey]],
+    startZoom: Int,
+    endZoom: Int,
+    resampleMethod: ResampleMethod,
+    scheme: LayoutScheme
+  ): Array[TiledRasterRDD[SpatialKey]] = {
+    val part = baseRDD.partitioner.getOrElse(new HashPartitioner(rdd.partitions.length))
+
+    val leveledList =
+      Pyramid.levelStream(
+        baseRDD,
+        scheme,
+        startZoom,
+        endZoom,
+        Pyramid.Options(resampleMethod=resampleMethod, partitioner=part)
+      )
+
+    leveledList.map{ x => SpatialTiledRasterRDD(Some(x._1), x._2) }.toArray
   }
 
   def pyramid(
@@ -404,18 +447,37 @@ class SpatialTiledRasterRDD(
 
     val method: ResampleMethod = TileRDD.getResampleMethod(resampleMethod)
     val scheme = ZoomedLayoutScheme(rdd.metadata.crs, rdd.metadata.tileRows)
-    val part = rdd.partitioner.getOrElse(new HashPartitioner(rdd.partitions.length))
 
-    val leveledList =
-      Pyramid.levelStream(
-        rdd,
-        scheme,
-        startZoom,
-        endZoom,
-        Pyramid.Options(resampleMethod=method, partitioner=part)
-      )
+    pyramid(rdd, startZoom, endZoom, method, scheme)
+  }
 
-    leveledList.map{ x => SpatialTiledRasterRDD(Some(x._1), x._2) }.toArray
+  def tmsPyramid(
+    startZoom: Int,
+    endZoom: Int,
+    resampleMethod: String
+  ): Array[TiledRasterRDD[SpatialKey]] = {
+    require(! rdd.metadata.bounds.isEmpty, "Can not pyramid an empty RDD")
+
+    val method: ResampleMethod = TileRDD.getResampleMethod(resampleMethod)
+    val scheme = ZoomedLayoutScheme(rdd.metadata.crs, rdd.metadata.tileRows)
+    val levelZoom = math.log(rdd.metadata.layoutRows.toDouble) / math.log(2)
+
+    val colsZoomedLayer = isZoomedLayer(rdd.metadata.tileCols)
+    val rowsZoomedLayer = isZoomedLayer(rdd.metadata.tileRows)
+
+    if (colsZoomedLayer && rowsZoomedLayer && startZoom == levelZoom)
+      pyramid(rdd, startZoom, endZoom, method, scheme)
+    else {
+      val LayoutLevel(_, layoutDefinition) = scheme.levelForZoom(startZoom)
+      //println(s"This is the extent of the LayoutDefinition ${layoutDefinition.layoutCols}")
+      //println(s"This is the tile layout of the LayoutDefinition ${layoutDefinition}")
+      //println("\n\n")
+      val newRDD = tileToLayout(layoutDefinition, resampleMethod).rdd
+      //println(s"This is the extent of the BaseRDD ${newRDD.metadata.layout.layoutCols}")
+      //println(s"This is the tile layout of the BaseRDD ${newRDD.metadata.layout}")
+      //println("\n\n")
+      pyramid(ContextRDD(newRDD, newRDD.metadata), startZoom, endZoom, method, scheme)
+    }
   }
 
   def focal(
@@ -684,6 +746,27 @@ class TemporalTiledRasterRDD(
   }
 
   def pyramid(
+    baseRDD: RDD[(SpaceTimeKey, MultibandTile)] with Metadata[TileLayerMetadata[SpaceTimeKey]],
+    startZoom: Int,
+    endZoom: Int,
+    resampleMethod: ResampleMethod,
+    scheme: LayoutScheme
+  ): Array[TiledRasterRDD[SpaceTimeKey]] = {
+    val part = rdd.partitioner.getOrElse(new HashPartitioner(rdd.partitions.length))
+
+    val leveledList =
+      Pyramid.levelStream(
+        baseRDD,
+        scheme,
+        startZoom,
+        endZoom,
+        Pyramid.Options(resampleMethod=resampleMethod, partitioner=part)
+      )
+
+    leveledList.map{ x => TemporalTiledRasterRDD(Some(x._1), x._2) }.toArray
+  }
+
+  def pyramid(
     startZoom: Int,
     endZoom: Int,
     resampleMethod: String
@@ -692,18 +775,31 @@ class TemporalTiledRasterRDD(
 
     val method: ResampleMethod = TileRDD.getResampleMethod(resampleMethod)
     val scheme = ZoomedLayoutScheme(rdd.metadata.crs, rdd.metadata.tileRows)
-    val part = rdd.partitioner.getOrElse(new HashPartitioner(rdd.partitions.length))
 
-    val leveledList =
-      Pyramid.levelStream(
-        rdd,
-        scheme,
-        startZoom,
-        endZoom,
-        Pyramid.Options(resampleMethod=method, partitioner=part)
-      )
+    pyramid(rdd, startZoom, endZoom, method, scheme)
+  }
 
-    leveledList.map{ x => TemporalTiledRasterRDD(Some(x._1), x._2) }.toArray
+  def tmsPyramid(
+    startZoom: Int,
+    endZoom: Int,
+    resampleMethod: String
+  ): Array[TiledRasterRDD[SpaceTimeKey]] = {
+    require(! rdd.metadata.bounds.isEmpty, "Can not pyramid an empty RDD")
+
+    val method: ResampleMethod = TileRDD.getResampleMethod(resampleMethod)
+    val scheme = ZoomedLayoutScheme(rdd.metadata.crs, rdd.metadata.tileRows)
+    val levelZoom = math.log(rdd.metadata.layoutRows.toDouble) / math.log(2)
+
+    val colsZoomedLayer = isZoomedLayer(rdd.metadata.tileCols)
+    val rowsZoomedLayer = isZoomedLayer(rdd.metadata.tileRows)
+
+    if (colsZoomedLayer && rowsZoomedLayer && startZoom == levelZoom)
+      pyramid(rdd, startZoom, endZoom, method, scheme)
+    else {
+      val LayoutLevel(_, layoutDefinition) = scheme.levelForZoom(startZoom)
+      val newRDD = tileToLayout(layoutDefinition, resampleMethod).rdd
+      pyramid(ContextRDD(newRDD, newRDD.metadata), startZoom, endZoom, method, scheme)
+    }
   }
 
   def focal(
