@@ -40,6 +40,29 @@ class PyramidingTest(BaseTestClass):
         self.assertEqual(result.levels[9].layer_metadata.tile_layout.tileCols, 1<<10)
         self.assertEqual(result.levels[9].layer_metadata.tile_layout.tileRows, 1<<10)
 
+    def test_tms_pyramid(self):
+        arr = np.zeros((1, 17, 17))
+        epsg_code = 3857
+        extent = Extent(0.0, 0.0, 10.0, 10.0)
+
+        tile = Tile(arr, 'FLOAT', False)
+        projected_extent = ProjectedExtent(extent, epsg_code)
+
+        rdd = BaseTestClass.pysc.parallelize([(projected_extent, tile)])
+        raster_rdd = RasterLayer.from_numpy_rdd(BaseTestClass.pysc, LayerType.SPATIAL, rdd)
+        tile_layout = TileLayout(1, 1, 17, 17)
+
+        metadata = raster_rdd.collect_metadata(tile_size=17, crs=3857)
+        laid_out = raster_rdd.tile_to_layout(metadata)
+
+        result = laid_out.reproject(3857).tms_pyramid(min_zoom=2, max_zoom=9)
+        actual = laid_out.reproject(3857, scheme="zoom").pyramid(end_zoom=2, start_zoom=9)
+        power = laid_out.reproject(3857, scheme="zoom").pyramid_non_power_of_two(9, 9, end_zoom=2, start_zoom=9)
+
+        print(power.levels[9].layer_metadata.layout_definition)
+        print(result.levels[9].layer_metadata.layout_definition)
+        print(actual.levels[9].layer_metadata.layout_definition)
+
     def test_correct_base(self):
         arr = np.zeros((1, 16, 16))
         epsg_code = 3857
