@@ -899,28 +899,23 @@ class TiledRasterLayer(CachableLayer):
         Args:
             target_crs (str or int): The CRS to reproject to. Can either be the EPSG code,
                 well-known name, or a PROJ.4 projection string.
-            extent (:class:`~geopyspark.geotrellis.Extent`, optional): Specify the layout
-                extent, must also specify ``layout``.
-            layout (:obj:`~geopyspark.geotrellis.TileLayout`, optional): Specify the tile layout,
-                must also specify ``extent``.
-            scheme (str or :class:`~geopyspark.geotrellis.constants.LayoutScheme`, optional): Which
-                scheme should be used. If not specified, then ``LayoutScheme.FLOAT`` is used.
-            tile_size (int, optional): Pixel dimensions of each tile, if not using layout.
-            resolution_threshold (double, optional): The percent difference between a cell size
-                and a zoom level along with the resolution difference between the zoom level and
-                the next one that is tolerated to snap to the lower-resolution zoom.
+            layout (
+                :obj:`~geopyspark.geotrellis.LocalLayout` or
+                :obj:`~geopysaprk.geotrellis.GlobalLayout` or
+                :obj:`~geopyspark.geotrellis.LayoutDefinition` or
+                :class:`~geopyspark.geotrellis.Metadata` or
+                :class:`~geopyspark.geotrellis.layer.TiledRasterLayer`, optional): Specify the
+                    layout the the tile should be in when it's reprojected. If None, then the
+                    default ``LocalLayout`` will be used.
             resample_method (str or :class:`~geopyspark.geotrellis.constants.ResampleMethod`, optional):
                 The resample method to use for the reprojection. If none is specified, then
                 ``ResampleMethods.NEAREST_NEIGHBOR`` is used.
-
-        Note:
-            ``extent`` and ``layout`` must both be defined if they are to be used.
 
         Returns:
             :class:`~geopyspark.geotrellis.rdd.TiledRasterLayer`
 
         Raises:
-            TypeError: If either ``extent`` or ``layout`` is defined but the other is not.
+            TypeError: If reproject could not be done from the given ``layout``.
         """
 
         if isinstance(target_crs, int):
