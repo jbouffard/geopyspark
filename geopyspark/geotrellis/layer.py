@@ -892,7 +892,7 @@ class TiledRasterLayer(CachableLayer):
             return TiledRasterLayer(self.pysc, self.layer_type,
                                     self.srdd.convertDataType(CellType(new_type).value))
 
-    def reproject(self, target_crs, layout=LocalLayout(),
+    def reproject(self, target_crs, layout=None,
                   resample_method=ResampleMethod.NEAREST_NEIGHBOR):
         """Reproject Layer as tiled raster layer, samples surrounding tiles.
 
@@ -906,7 +906,7 @@ class TiledRasterLayer(CachableLayer):
                 :class:`~geopyspark.geotrellis.Metadata` or
                 :class:`~geopyspark.geotrellis.layer.TiledRasterLayer`, optional): Specify the
                     layout the the tile should be in when it's reprojected. If None, then the
-                    default ``LocalLayout`` will be used.
+                    layout will be derived from the ``layer_metadata``.
             resample_method (str or :class:`~geopyspark.geotrellis.constants.ResampleMethod`, optional):
                 The resample method to use for the reprojection. If none is specified, then
                 ``ResampleMethods.NEAREST_NEIGHBOR`` is used.
@@ -920,6 +920,8 @@ class TiledRasterLayer(CachableLayer):
 
         if isinstance(target_crs, int):
             target_crs = str(target_crs)
+
+        layout = layout or self.layer_metadata.layout_definition
 
         if isinstance(layout, (LocalLayout, GlobalLayout)):
             srdd = self.srdd.reproject(layout, target_crs, ResampleMethod(resample_method))
