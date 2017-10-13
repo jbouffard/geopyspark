@@ -203,26 +203,25 @@ class TemporalTiledRasterLayer(
 
     val crs = rdd.metadata.crs
 
-    val convertElem: (SpaceTimeKey, MultibandTile) => (TemporalProjectedExtent, MultibandTile) =
-      (k: SpaceTimeKey, v: MultibandTile) =>
-        (TemporalProjectedExtent(mapKeyTransform(k), rdd.metadata.crs, k.instant), v)
+    val tileLayer = {
+      val convertElem: (SpaceTimeKey, MultibandTile) => (TemporalProjectedExtent, MultibandTile) =
+        (k: SpaceTimeKey, v: MultibandTile) =>
+          (TemporalProjectedExtent(mapKeyTransform(k), rdd.metadata.crs, k.instant), v)
 
-    val temporalRDD = rdd.mapPartitions { iter =>
-      iter.map { case (k, v) => convertElem(k, v) }
-    }
+      val temporalRDD = rdd.map { case (k, v) => convertElem(k, v) }
 
-    val bounds = rdd.metadata.bounds.get
-    val spatialBounds = KeyBounds(mapKeyTransform(rdd.metadata.extent))
-    val retiledLayerMetadata = rdd.metadata.copy(
-      layout = layoutDefinition,
-      bounds = KeyBounds(
-        minKey = bounds.minKey.setComponent[SpatialKey](spatialBounds.minKey),
-        maxKey = bounds.maxKey.setComponent[SpatialKey](spatialBounds.maxKey)
+      val bounds = rdd.metadata.bounds.get
+      val spatialBounds = KeyBounds(mapKeyTransform(rdd.metadata.extent))
+      val retiledLayerMetadata = rdd.metadata.copy(
+        layout = layoutDefinition,
+        bounds = KeyBounds(
+          minKey = bounds.minKey.setComponent[SpatialKey](spatialBounds.minKey),
+          maxKey = bounds.maxKey.setComponent[SpatialKey](spatialBounds.maxKey)
+        )
       )
-    )
 
-    val tileLayer =
       MultibandTileLayerRDD(temporalRDD.tileToLayout(retiledLayerMetadata, resampleMethod), retiledLayerMetadata)
+    }
 
     TemporalTiledRasterLayer(zoom, tileLayer)
   }
