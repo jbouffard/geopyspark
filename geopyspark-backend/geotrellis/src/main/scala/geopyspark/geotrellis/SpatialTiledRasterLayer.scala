@@ -52,7 +52,7 @@ import scala.collection.mutable.ArrayBuffer
 class SpatialTiledRasterLayer(
   val zoomLevel: Option[Int],
   val rdd: RDD[(SpatialKey, MultibandTile)] with Metadata[TileLayerMetadata[SpatialKey]]
-) extends TiledRasterLayer[SpatialKey] {
+) extends TiledRasterLayer[SpatialKey] with Serializable {
 
   def lookup(
     col: Int,
