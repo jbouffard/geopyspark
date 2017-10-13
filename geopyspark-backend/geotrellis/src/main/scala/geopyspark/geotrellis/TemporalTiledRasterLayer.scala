@@ -203,10 +203,12 @@ class TemporalTiledRasterLayer(
 
     val crs = rdd.metadata.crs
 
-    val temporalRDD = rdd.mapPartitions { iter =>
-      iter.map { case (k, v) =>
+    val convertElem: (SpaceTimeKey, MultibandTile) => (TemporalProjectedExtent, MultibandTile) =
+      (k: SpaceTimeKey, v: MultibandTile) =>
         (TemporalProjectedExtent(mapKeyTransform(k), rdd.metadata.crs, k.instant), v)
-      }
+
+    val temporalRDD = rdd.mapPartitions { iter =>
+      iter.map { case (k, v) => convertElem(k, v) }
     }
 
     val bounds = rdd.metadata.bounds.get
