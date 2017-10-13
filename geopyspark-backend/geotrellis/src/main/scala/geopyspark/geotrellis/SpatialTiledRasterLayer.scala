@@ -104,7 +104,11 @@ class SpatialTiledRasterLayer(
         layoutDefinition.layoutRows)
 
     val crs = rdd.metadata.crs
-    val projectedRDD = rdd.map{ x => (ProjectedExtent(mapKeyTransform(x._1), crs), x._2) }
+    val projectedRDD = rdd.mapPartitions{ iter =>
+      iter.map { case (k, v) =>
+        (ProjectedExtent(mapKeyTransform(k), crs), v)
+      }
+    }
     val retiledLayerMetadata = rdd.metadata.copy(
       layout = layoutDefinition,
       bounds = KeyBounds(mapKeyTransform(rdd.metadata.extent))
