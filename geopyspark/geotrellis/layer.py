@@ -768,6 +768,9 @@ class TiledRasterLayer(CachableLayer, TileLayer):
         self.layer_metadata = Metadata.from_dict(json.loads(self.srdd.layerMetadata()))
         self.zoom_level = self.srdd.getZoom()
 
+    def test(self):
+        return "This was a test to make sure everything is working"
+
     @classmethod
     def from_numpy_rdd(cls, layer_type, numpy_rdd, metadata, zoom_level=None):
         """Create a ``TiledRasterLayer`` from a numpy RDD.
