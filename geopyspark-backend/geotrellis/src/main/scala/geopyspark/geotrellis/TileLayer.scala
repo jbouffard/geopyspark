@@ -27,7 +27,7 @@ import scala.reflect.{ClassTag, classTag}
 import scala.collection.JavaConverters._
 import scala.util.Try
 
-abstract class TileLayer[K: ClassTag] {
+abstract class TileLayer[K: ClassTag] extends Serializable {
   def rdd: RDD[(K, MultibandTile)]
   def keyClass: Class[_] = classTag[K].runtimeClass
   def keyClassName: String = keyClass.getName
