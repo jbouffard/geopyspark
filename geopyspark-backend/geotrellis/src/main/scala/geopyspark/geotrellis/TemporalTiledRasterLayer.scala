@@ -54,7 +54,7 @@ import scala.collection.mutable.ArrayBuffer
 class TemporalTiledRasterLayer(
   val zoomLevel: Option[Int],
   val rdd: RDD[(SpaceTimeKey, MultibandTile)] with Metadata[TileLayerMetadata[SpaceTimeKey]]
-) extends TiledRasterLayer[SpaceTimeKey] {
+) extends TiledRasterLayer[SpaceTimeKey] with Serializable {
 
   def resample_to_power_of_two(
     col_power: Int,
