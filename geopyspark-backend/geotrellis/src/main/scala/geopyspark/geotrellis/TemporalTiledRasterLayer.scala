@@ -205,7 +205,8 @@ class TemporalTiledRasterLayer(
 
     val temporalRDD = rdd.mapPartitions { iter =>
       iter.map { case (k, v) =>
-        (TemporalProjectedExtent(mapKeyTransform(k), rdd.metadata.crs, k.instant), v)
+        val extent = mapKeyTransform(k)
+        (TemporalProjectedExtent(extent, crs, k.instant), v)
       }
     }
 
