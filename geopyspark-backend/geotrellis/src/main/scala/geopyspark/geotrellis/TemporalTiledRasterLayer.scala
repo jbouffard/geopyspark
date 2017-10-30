@@ -24,6 +24,7 @@ import geotrellis.spark.mapalgebra.local._
 import geotrellis.spark.mapalgebra.focal._
 import geotrellis.spark.mask.Mask
 import geotrellis.spark.pyramid._
+import geotrellis.spark.regrid._
 import geotrellis.spark.reproject._
 import geotrellis.spark.tiling._
 import geotrellis.spark.util._
@@ -195,6 +196,10 @@ class TemporalTiledRasterLayer(
     zoom: Option[Int],
     resampleMethod: ResampleMethod
   ): TiledRasterLayer[SpaceTimeKey] = {
+    val regrided = Regrid(rdd, layoutDefinition.tileCols, layoutDefinition.tileRows)
+
+    TemporalTiledRasterLayer(zoom, regrided)
+    /*
     val mapKeyTransform =
       MapKeyTransform(
         layoutDefinition.extent,
@@ -221,6 +226,7 @@ class TemporalTiledRasterLayer(
       MultibandTileLayerRDD(temporalRDD.tileToLayout(retiledLayerMetadata, resampleMethod), retiledLayerMetadata)
 
     TemporalTiledRasterLayer(zoom, tileLayer)
+    */
   }
 
   def tileToLayout(
