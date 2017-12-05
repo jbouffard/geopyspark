@@ -40,3 +40,7 @@ lazy val translatorProject = Project("translator", file("translator"))
 lazy val geotrellisProject = Project("geotrellis-backend", file("geotrellis"))
   .settings(commonSettings: _*)
   .dependsOn(root, translatorProject)
+
+lazy val vectorPipeProject = Project("vector-pipe", file("vector-pipe"))
+  .settings(commonSettings: _*)
+  .dependsOn(root, translatorProject)
