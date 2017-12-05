@@ -1,4 +1,4 @@
 package geopyspark
 
 
-package object geotrellis extends protobufs.Implicits
+import geopyspark.translator._

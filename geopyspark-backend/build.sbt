@@ -33,6 +33,10 @@ scalaVersion := Version.scala
 
 lazy val root = Project("root", file("."))
 
-lazy val geotrellisProject = Project("geotrellis-backend", file("geotrellis"))
+lazy val translatorProject = Project("translator", file("translator"))
   .settings(commonSettings: _*)
   .dependsOn(root)
+
+lazy val geotrellisProject = Project("geotrellis-backend", file("geotrellis"))
+  .settings(commonSettings: _*)
+  .dependsOn(root, translatorProject)
