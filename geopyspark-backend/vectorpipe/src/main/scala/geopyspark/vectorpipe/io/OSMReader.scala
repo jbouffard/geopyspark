@@ -18,7 +18,7 @@ object OSMReader {
     source: String
   ): FeaturesCollection =
     osm.fromORC(source)(ss) match {
-      case Failure(e) => null
+      case Failure(e) => throw new Exception(e)
       case S((ns, ws, rs)) => FeaturesCollection(osm.features(ns, ws, rs))
     }
 }
