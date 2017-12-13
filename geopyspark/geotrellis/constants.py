@@ -6,7 +6,7 @@ __all__ = ['NO_DATA_INT', 'LayerType', 'IndexingMethod', 'ResampleMethod', 'Time
            'Operation', 'Neighborhood', 'ClassificationStrategy', 'CellType', 'ColorRamp',
            'DEFAULT_MAX_TILE_SIZE', 'DEFAULT_PARTITION_BYTES', 'DEFAULT_CHUNK_SIZE',
            'DEFAULT_GEOTIFF_TIME_TAG', 'DEFAULT_GEOTIFF_TIME_FORMAT', 'DEFAULT_S3_CLIENT',
-           'StorageMethod', 'ColorSpace', 'Compression', 'TargetCell']
+           'StorageMethod', 'ColorSpace', 'Compression']
 
 
 """The NoData value for ints in GeoTrellis."""
@@ -286,10 +286,3 @@ class Compression(Enum):
     NO_COMPRESSION = "NoCompression"
     DEFLATE_COMPRESSION = "DeflateCompression"
 
-
-class TargetCell(Enum):
-    """Determines which cells in the layer should be used when running a computation."""
-
-    ALL = "All"
-    DATA = "Data"
-    NODATA = "NoData"

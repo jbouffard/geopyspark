@@ -315,26 +315,18 @@ abstract class TiledRasterLayer[K: SpatialComponent: JsonFormat: ClassTag: Bound
       case multi: MultiPolygon => rdd.polygonalSumDouble(multi)
     }
 
-  def tobler(
-    zFactor: Double,
-    targetCell: String
-  ): TiledRasterLayer[K] = {
-    val n = Square(1)
-    val target = TileLayer.getTarget(targetCell)
-    val singlebandRDD: TileLayerRDD[K] = rdd.withContext(_.mapValues(_.band(0)))
-    val cellSize = singlebandRDD.metadata.layout.cellSize
-
-    val toblerCalc = (tile: Tile, bounds: Option[GridBounds], cellSize: CellSize) =>
-      Tobler(tile, n, bounds, cellSize, zFactor, target)
-
-    val result: TileLayerRDD[K] =
-      singlebandRDD
-        .withContext {
-          _.mapValues(Tobler(_, n, Some(singlebandRDD.metadata.gridBounds), cellSize, zFactor, target))
+  def tobler(): TiledRasterLayer[K] = withRDD {
+    rdd.withContext { rdd =>
+      rdd.mapValues { bands =>
+        bands.mapBands { (i, tile) =>
+          tile.mapDouble { z =>
+            val radians = z * math.Pi / 180.0
+            val m = math.tan(radians)
+            6 * (math.pow(math.E, (-3.5 * math.abs(m + 0.05))))
+          }
         }
-        .mapContext(_.copy(cellType = DoubleConstantNoDataCellType))
-
-    withRDD(result.withContext(_.mapValues(MultibandTile(_))))
+      }
+    }
   }
 
   def aggregateByCell(operation: String): TiledRasterLayer[K] = {
