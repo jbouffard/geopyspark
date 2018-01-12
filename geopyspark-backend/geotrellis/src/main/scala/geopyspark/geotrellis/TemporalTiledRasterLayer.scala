@@ -250,7 +250,9 @@ class TemporalTiledRasterLayer(
     neighborhood: String,
     param1: Double,
     param2: Double,
-    param3: Double
+    param3: Double,
+    partitioner: String,
+    numPartitions: Int
   ): TiledRasterLayer[SpaceTimeKey] = {
     val singleTileLayerRDD: TileLayerRDD[SpaceTimeKey] = TileLayerRDD(
       rdd.mapValues({ v => v.band(0) }),
@@ -261,7 +263,14 @@ class TemporalTiledRasterLayer(
     val cellSize = rdd.metadata.layout.cellSize
     val op: ((Tile, Option[GridBounds]) => Tile) = getOperation(operation, _neighborhood, cellSize, param1)
 
-    val result: TileLayerRDD[SpaceTimeKey] = FocalOperation(singleTileLayerRDD, _neighborhood)(op)
+    val targetPartitioner: Option[Partitioner] =
+      if (partitioner == null)
+        None
+      else
+        Some(TileLayer.getPartitioner(numPartitions, partitioner))
+
+    val result: TileLayerRDD[SpaceTimeKey] =
+      FocalOperation(singleTileLayerRDD, _neighborhood, targetPartitioner)(op)
 
     val multibandRDD: MultibandTileLayerRDD[SpaceTimeKey] =
       MultibandTileLayerRDD(result.mapValues{ x => MultibandTile(x) }, result.metadata)

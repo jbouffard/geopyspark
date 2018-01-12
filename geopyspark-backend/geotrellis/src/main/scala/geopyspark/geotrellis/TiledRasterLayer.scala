@@ -126,7 +126,9 @@ abstract class TiledRasterLayer[K: SpatialComponent: JsonFormat: ClassTag: Bound
     neighborhood: String,
     param1: Double,
     param2: Double,
-    param3: Double
+    param3: Double,
+    partitioner: String,
+    numPartitions: Int
   ): TiledRasterLayer[K]
 
   def slope(zFactorCalculator: ZFactorCalculator): TiledRasterLayer[K]

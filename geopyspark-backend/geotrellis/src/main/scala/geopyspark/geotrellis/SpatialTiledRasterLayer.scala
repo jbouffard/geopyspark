@@ -147,7 +147,9 @@ class SpatialTiledRasterLayer(
     neighborhood: String,
     param1: Double,
     param2: Double,
-    param3: Double
+    param3: Double,
+    partitioner: String,
+    numPartitions: Int
   ): TiledRasterLayer[SpatialKey] = {
     val singleTileLayerRDD: TileLayerRDD[SpatialKey] = TileLayerRDD(
       rdd.mapValues({ v => v.band(0) }),
@@ -163,7 +165,14 @@ class SpatialTiledRasterLayer(
     val cellSize = rdd.metadata.layout.cellSize
     val op: ((Tile, Option[GridBounds]) => Tile) = getOperation(operation, _neighborhood, cellSize, param1)
 
-    val result: TileLayerRDD[SpatialKey] = FocalOperation(singleTileLayerRDD, _neighborhood)(op)
+    val targetPartitioner: Option[Partitioner] =
+      if (partitioner == null)
+        None
+      else
+        Some(TileLayer.getPartitioner(numPartitions, partitioner))
+
+    val result: TileLayerRDD[SpatialKey] =
+      FocalOperation(singleTileLayerRDD, _neighborhood, targetPartitioner)(op)
 
     val multibandRDD: MultibandTileLayerRDD[SpatialKey] =
       MultibandTileLayerRDD(result.mapValues{ x => MultibandTile(x) }, result.metadata)

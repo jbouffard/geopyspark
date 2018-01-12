@@ -1324,7 +1324,15 @@ class TiledRasterLayer(CachableLayer, TileLayer):
         result = self.srdd.pyramid(resample_method, partitioner)
         return Pyramid([TiledRasterLayer(self.layer_type, srdd) for srdd in result])
 
-    def focal(self, operation, neighborhood=None, param_1=None, param_2=None, param_3=None):
+    def focal(
+            self,
+            operation,
+            neighborhood=None,
+            param_1=None,
+            param_2=None,
+            param_3=None,
+            partitioner=None,
+            num_partitions=None):
         """Performs the given focal operation on the layers contained in the Layer.
 
         Args:
@@ -1336,6 +1344,18 @@ class TiledRasterLayer(CachableLayer, TileLayer):
             param_1 (int or float, optional): The first argument of ``neighborhood``.
             param_2 (int or float, optional): The second argument of the ``neighborhood``.
             param_3 (int or float, optional): The third argument of the ``neighborhood``.
+            partitioner (str or :class:`~geopyspark.geotrellis.constants.Partitioner`, optional): The
+                ``Partitioner`` to use during the focal operation which the resulting layer
+                will have. If ``None``, then the ``Partitioner`` used and that the resulting
+                layer will have will be whatever one the input layer had. If that is also
+                ``None`` then ``HASH_PARTITIONER`` will be used. Default is, ``None``.
+            num_partitions (int, optional): The number of partitions the selected ``partitioner``
+                will have. If ``None``, then the number of partitions the input layer has will
+                be used. Default is, ``None``.
+
+                Note:
+                    If you wish to keep the layer's partitioner but change the number of partitions,
+                    then the ``partitioner`` and ``num_partitions`` must still be set.
 
         Note:
             ``param`` only need to be set if ``neighborhood`` is not an instance of
@@ -1357,10 +1377,12 @@ class TiledRasterLayer(CachableLayer, TileLayer):
         """
 
         operation = Operation(operation).value
+        partitioner = Partitioner(partitioner).value or None
+        num_partitions = num_partitions or self.getNumPartitions
 
         if isinstance(neighborhood, Neighborhood):
             srdd = self.srdd.focal(operation, neighborhood.name, neighborhood.param_1,
-                                   neighborhood.param_2, neighborhood.param_3)
+                                   neighborhood.param_2, neighborhood.param_3, partitioner, num_partitions)
 
         elif isinstance(neighborhood, (str, nb)):
             param_1 = param_1 or 0.0
@@ -1368,11 +1390,11 @@ class TiledRasterLayer(CachableLayer, TileLayer):
             param_3 = param_3 or 0.0
 
             srdd = self.srdd.focal(operation, nb(neighborhood).value,
-                                   float(param_1), float(param_2), float(param_3))
+                                   float(param_1), float(param_2), float(param_3), partitioner, num_partitions)
 
         elif not neighborhood and operation == Operation.ASPECT.value:
             z_factor = float(param_1 or 1.0)
-            srdd = self.srdd.focal(operation, nb.SQUARE.value, z_factor, 0.0, 0.0)
+            srdd = self.srdd.focal(operation, nb.SQUARE.value, z_factor, 0.0, 0.0, partitioner, num_partitions)
 
         else:
             raise ValueError("neighborhood must be set or the operation must be ASPECT")
