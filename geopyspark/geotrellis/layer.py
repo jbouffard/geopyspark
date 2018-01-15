@@ -278,6 +278,26 @@ class CachableLayer(object):
 
         return self.srdd.rdd().getNumPartitions()
 
+    def partitioner(self):
+        """Returns the ``Partitioner`` being used by the layer.
+
+        Note:
+            If no ``Partitioner`` has been set then ``None`` will be returned.
+
+        Returns:
+            :class:`~geopyspark.geotrellis.Partitioner` or ``None``
+        """
+
+        partitioner = self.srdd.partitioner()
+
+        if partitioner:
+            if partitioner == "HashPartitioner":
+                return Partitioner.create_hash_partitioner(self.getNumPartitions())
+            else:
+                return Partitioner.create_spatial_partitioner(self.getNumPartitions())
+        else:
+            partitioner
+
     def count(self):
         """Returns how many elements are within the wrapped RDD.
 
