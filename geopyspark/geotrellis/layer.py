@@ -13,6 +13,7 @@ from geopyspark.geotrellis.protobufcodecs import (multibandtile_decoder,
                                                   temporal_projected_extent_decoder,
                                                   spatial_key_decoder,
                                                   space_time_key_decoder)
+
 from geopyspark.geotrellis.protobufserializer import ProtoBufSerializer
 from geopyspark.geopyspark_utils import ensure_pyspark
 ensure_pyspark()
@@ -25,7 +26,9 @@ from geopyspark.geotrellis import (Metadata,
                                    GlobalLayout,
                                    LayoutDefinition,
                                    crs_to_proj4,
-                                   _convert_to_unix_time)
+                                   _convert_to_unix_time,
+                                   Partitioner)
+
 from geopyspark.geotrellis.histogram import Histogram
 from geopyspark.geotrellis.constants import (Operation,
                                              Neighborhood as nb,
@@ -36,8 +39,7 @@ from geopyspark.geotrellis.constants import (Operation,
                                              StorageMethod,
                                              ColorSpace,
                                              Compression,
-                                             NO_DATA_INT,
-                                             Partitioner
+                                             NO_DATA_INT
                                             )
 from geopyspark.geotrellis.neighborhood import Neighborhood
 
@@ -588,7 +590,7 @@ class RasterLayer(CachableLayer, TileLayer):
         else:
             return [temporal_projected_extent_decoder(key) for key in self.srdd.collectKeys()]
 
-    def merge(self, num_partitions=None, partitioner=Partitioner.HASH_PARTITIONER):
+    def merge(self, partitioner=None):
         """Merges the ``Tile`` of each ``K`` together to produce a single ``Tile``.
 
         This method will reduce each value by its key within the layer to produce a single
@@ -602,19 +604,16 @@ class RasterLayer(CachableLayer, TileLayer):
             3. If neither of the above are true, then the cell retain its value.
 
         Args:
-            num_partitions (int, optional): The number of partitions that the resulting
-                layer should be partitioned with. If ``None``, then the ``num_partitions``
-                will the number of partitions the layer curretly has.
-            partitioner (str or :class:`~geopyspark.geotrellis.constants.Partitioner`, optional):
-                The partitioner that should be used to repartition the data. The default is
-                ``Partitioner.HASH_PARTITIONER``.
+            partitioner (:class:`~geopyspark.geotrellis.Partitioner`, optional):
+                The ``Partitioner`` that should be used when merging the data. If ``None``,
+                then the resulting layer will have a ``Partitioner`` of ``HashPartitioner``
+                with the number of partitions being the same as what the input layer had.
 
         Returns:
             :class:`~geopyspark.geotrellis.layer.RasterLayer`
         """
 
-        partitioner = Partitioner(partitioner).value
-        result = self.srdd.merge(num_partitions, partitioner)
+        result = self.srdd.merge(partitioner)
 
         return RasterLayer(self.layer_type, result)
 
@@ -937,7 +936,7 @@ class TiledRasterLayer(CachableLayer, TileLayer):
         else:
             return [space_time_key_decoder(key) for key in self.srdd.collectKeys()]
 
-    def merge(self, num_partitions=None, partitioner=Partitioner.HASH_PARTITIONER):
+    def merge(self, partitioner=None):
         """Merges the ``Tile`` of each ``K`` together to produce a single ``Tile``.
 
         This method will reduce each value by its key within the layer to produce a single
@@ -951,19 +950,16 @@ class TiledRasterLayer(CachableLayer, TileLayer):
             3. If neither of the above are true, then the cell retain its value.
 
         Args:
-            num_partitions (int, optional): The number of partitions that the resulting
-                layer should be partitioned with. If ``None``, then the ``num_partitions``
-                will the number of partitions the layer curretly has.
-            partitioner (str or :class:`~geopyspark.geotrellis.constants.Partitioner`, optional):
-                The partitioner that should be used to repartition the data. The default is
-                ``Partitioner.HASH_PARTITIONER``.
+            partitioner (:class:`~geopyspark.geotrellis.Partitioner`, optional):
+                The ``Partitioner`` that should be used when merging the data. If ``None``,
+                then the resulting layer will have a ``Partitioner`` of ``HashPartitioner``
+                with the number of partitions being the same as what the input layer had.
 
         Returns:
             :class:`~geopyspark.geotrellis.layer.TiledRasterLayer`
         """
 
-        partitioner = Partitioner(partitioner).value
-        result = self.srdd.merge(num_partitions, partitioner)
+        result = self.srdd.merge(partitioner)
 
         return TiledRasterLayer(self.layer_type, result)
 
@@ -1199,24 +1195,34 @@ class TiledRasterLayer(CachableLayer, TileLayer):
 
         return TiledRasterLayer(self.layer_type, srdd)
 
-    def repartition(self, num_partitions=None, partitioner=Partitioner.HASH_PARTITIONER):
+    def repartition(self, num_partitions=None, partitioner=None):
         """Repartition underlying RDD using the given partitioner.
 
         Args:
-            num_partitions(int, optional): Desired number of partitions. If ``None``,
-                then the exisiting number of partitions will be used.
-            partitioner (str or :class:`~geopyspark.geotrellis.constants.Partitioner`, optional):
-                The partitioner that should be used to repartition the data. The default is
-                ``Partitioner.HASH_PARTITIONER``.
+            num_partitions (int, optional): How many partitions the resulting layer
+                should have. Default is, ``None``. If ``None`` and ``partitioner`` is
+                ``None``, then the resulting layer will have as many partitions as the
+                input layer.
+
+                Note:
+                    If ``partitioner`` is also set then this will be ignored in favor
+                    of the ``num_partitions`` set in ``partitioner``.
+
+            partitioner (:class:`~geopyspark.geotrellis.Partitioner`, optional):
+                The ``Partitioner`` that should be used to repartition the data. If ``None``
+                and ``num_partitions`` is ``None``, then the resulting layer will have
+                whatever ``Partitioner`` the input layer had.
 
         Returns:
-            :class:`~geopyspark.geotrellis.rdd.TiledRasterLayer`
+            :class:`~geopyspark.geotrellis.layer.TiledRasterLayer`
         """
 
-        num_partitions = num_partitions or self.getNumPartitions()
-        partitioner = Partitioner(partitioner).value
-
-        return TiledRasterLayer(self.layer_type, self.srdd.repartition(num_partitions, partitioner))
+        if partitioner:
+            return TiledRasterLayer(self.layer_type, self.srdd.repartition(partitioner))
+        elif num_partitions:
+            return TiledRasterLayer(self.layer_type, self.srdd.repartition(num_partitions))
+        else:
+            return self
 
     def lookup(self, col, row):
         """Return the value(s) in the image of a particular ``SpatialKey`` (given by col and row).
@@ -1301,16 +1307,17 @@ class TiledRasterLayer(CachableLayer, TileLayer):
 
         return TiledRasterLayer(self.layer_type, srdd)
 
-    def pyramid(self, resample_method=ResampleMethod.NEAREST_NEIGHBOR, partitioner=Partitioner.HASH_PARTITIONER):
+    def pyramid(self, resample_method=ResampleMethod.NEAREST_NEIGHBOR, partitioner=None):
         """Creates a layer ``Pyramid`` where the resolution is halved per level.
 
         Args:
             resample_method (str or :class:`~geopyspark.geotrellis.constants.ResampleMethod`, optional):
                 The resample method to use when building the pyramid.
                 Default is ``ResampleMethods.NEAREST_NEIGHBOR``.
-            partitioner (str or :class:`~geopyspark.geotrellis.constants.Partitioner`, optional):
-                The partitioner that should be used to repartition the data. The default is
-                ``Partitioner.HASH_PARTITIONER``.
+            partitioner (:class:`~geopyspark.geotrellis.Partitioner`, optional):
+                The ``Partitioner`` that should be used when pyramiding the data. If ``None``,
+                then the resulting layer will have a ``Partitioner`` of ``HashPartitioner``
+                with the number of partitions being the same as what the input layer had.
 
         Returns:
             :class:`~geopyspark.geotrellis.layer.Pyramid`.
@@ -1320,7 +1327,6 @@ class TiledRasterLayer(CachableLayer, TileLayer):
         """
 
         resample_method = ResampleMethod(resample_method)
-        partitioner = Partitioner(partitioner).value
         result = self.srdd.pyramid(resample_method, partitioner)
         return Pyramid([TiledRasterLayer(self.layer_type, srdd) for srdd in result])
 
@@ -1331,8 +1337,7 @@ class TiledRasterLayer(CachableLayer, TileLayer):
             param_1=None,
             param_2=None,
             param_3=None,
-            partitioner=None,
-            num_partitions=None):
+            partitioner=None):
         """Performs the given focal operation on the layers contained in the Layer.
 
         Args:
@@ -1344,18 +1349,10 @@ class TiledRasterLayer(CachableLayer, TileLayer):
             param_1 (int or float, optional): The first argument of ``neighborhood``.
             param_2 (int or float, optional): The second argument of the ``neighborhood``.
             param_3 (int or float, optional): The third argument of the ``neighborhood``.
-            partitioner (str or :class:`~geopyspark.geotrellis.constants.Partitioner`, optional): The
-                ``Partitioner`` to use during the focal operation which the resulting layer
-                will have. If ``None``, then the ``Partitioner`` used and that the resulting
-                layer will have will be whatever one the input layer had. If that is also
-                ``None`` then ``HASH_PARTITIONER`` will be used. Default is, ``None``.
-            num_partitions (int, optional): The number of partitions the selected ``partitioner``
-                will have. If ``None``, then the number of partitions the input layer has will
-                be used. Default is, ``None``.
-
-                Note:
-                    If you wish to keep the layer's partitioner but change the number of partitions,
-                    then the ``partitioner`` and ``num_partitions`` must still be set.
+            partitioner (:class:`~geopyspark.geotrellis.Partitioner`, optional):
+                The ``Partitioner`` to use during the focal operation. If ``None``,
+                then the resulting layer will have a ``Partitioner`` of ``HashPartitioner``
+                with the number of partitions being the same as what the input layer had.
 
         Note:
             ``param`` only need to be set if ``neighborhood`` is not an instance of
@@ -1377,12 +1374,10 @@ class TiledRasterLayer(CachableLayer, TileLayer):
         """
 
         operation = Operation(operation).value
-        partitioner = Partitioner(partitioner).value or None
-        num_partitions = num_partitions or self.getNumPartitions
 
         if isinstance(neighborhood, Neighborhood):
             srdd = self.srdd.focal(operation, neighborhood.name, neighborhood.param_1,
-                                   neighborhood.param_2, neighborhood.param_3, partitioner, num_partitions)
+                                   neighborhood.param_2, neighborhood.param_3, partitioner)
 
         elif isinstance(neighborhood, (str, nb)):
             param_1 = param_1 or 0.0
@@ -1390,11 +1385,11 @@ class TiledRasterLayer(CachableLayer, TileLayer):
             param_3 = param_3 or 0.0
 
             srdd = self.srdd.focal(operation, nb(neighborhood).value,
-                                   float(param_1), float(param_2), float(param_3), partitioner, num_partitions)
+                                   float(param_1), float(param_2), float(param_3), partitioner)
 
         elif not neighborhood and operation == Operation.ASPECT.value:
             z_factor = float(param_1 or 1.0)
-            srdd = self.srdd.focal(operation, nb.SQUARE.value, z_factor, 0.0, 0.0, partitioner, num_partitions)
+            srdd = self.srdd.focal(operation, nb.SQUARE.value, z_factor, 0.0, 0.0, partitioner)
 
         else:
             raise ValueError("neighborhood must be set or the operation must be ASPECT")

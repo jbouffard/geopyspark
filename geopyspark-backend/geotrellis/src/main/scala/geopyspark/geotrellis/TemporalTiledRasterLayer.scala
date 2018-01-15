@@ -224,9 +224,15 @@ class TemporalTiledRasterLayer(
     TemporalTiledRasterLayer(zoom, tileLayer)
   }
 
-  def pyramid(resampleMethod: ResampleMethod, partitioner: String): Array[TiledRasterLayer[SpaceTimeKey]] = {
+  def pyramid(resampleMethod: ResampleMethod, partitioner: Partitioner): Array[TiledRasterLayer[SpaceTimeKey]] = {
     require(! rdd.metadata.bounds.isEmpty, "Can not pyramid an empty RDD")
-    val part = TileLayer.getPartitioner(rdd.partitions.length, partitioner)
+
+    val part =
+      partitioner match {
+        case null => None
+        case p: Partitioner => Some(p)
+      }
+
     val (baseZoom, scheme) =
       zoomLevel match {
         case Some(zoom) =>
@@ -251,8 +257,7 @@ class TemporalTiledRasterLayer(
     param1: Double,
     param2: Double,
     param3: Double,
-    partitioner: String,
-    numPartitions: Int
+    partitioner: Partitioner
   ): TiledRasterLayer[SpaceTimeKey] = {
     val singleTileLayerRDD: TileLayerRDD[SpaceTimeKey] = TileLayerRDD(
       rdd.mapValues({ v => v.band(0) }),
@@ -264,10 +269,10 @@ class TemporalTiledRasterLayer(
     val op: ((Tile, Option[GridBounds]) => Tile) = getOperation(operation, _neighborhood, cellSize, param1)
 
     val targetPartitioner: Option[Partitioner] =
-      if (partitioner == null)
-        None
-      else
-        Some(TileLayer.getPartitioner(numPartitions, partitioner))
+      partitioner match {
+        case null => None
+        case p: Partitioner => Some(p)
+      }
 
     val result: TileLayerRDD[SpaceTimeKey] =
       FocalOperation(singleTileLayerRDD, _neighborhood, targetPartitioner)(op)
