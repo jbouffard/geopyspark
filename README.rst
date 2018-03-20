@@ -29,7 +29,7 @@ of the state of Pennsylvania from 2011, and do a masking operation on it with
 a Polygon that represents an area of interest. This masked layer is then saved.
 
 If you wish to follow along with this example, you will need to download the
-NLCD data and unzip it.. Running these two commands will complete these tasks
+NLCD data and unzip it. Running these two commands will complete these tasks
 for you:
 
 .. code:: console
@@ -272,7 +272,7 @@ Make Targets
 Developing GeoPySpark With GeoNotebook
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-**Note**: Before begining this section, it should be noted that python-mapnik,
+**Note**: Before beginning this section, it should be noted that python-mapnik,
 a dependency for GeoNotebook, has been found to be difficult to install. If
 problems are encountered during installation, a possible work around would be
 to run ``make wheel`` and then do ``docker cp`` the ``wheel`` into the
