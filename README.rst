@@ -10,10 +10,11 @@ GeoPySpark
 .. image:: https://badges.gitter.im/locationtech-labs/geopyspark.png
    :target: https://gitter.im/geotrellis/geotrellis
 
-GeoPySpark is a Python bindings library for `GeoTrellis <http://geotrellis.io>`_, a Scala
-library for working with geospatial data in a distributed environment.
-By using `PySpark <http://spark.apache.org/docs/latest/api/python/pyspark.html>`_, GeoPySpark is
-able to provide an interface into the GeoTrellis framework.
+GeoPySpark is a Python bindings library for `GeoTrellis <http://geotrellis.io>`_ and
+`GeoMesa <http://geomesa.org>`_. GeoTrellis and GeoMesa together form a complete
+GeoSpatial analytics platform for working with distributed geospatial data. By
+using `PySpark <http://spark.apache.org/docs/latest/api/python/pyspark.html>`_,
+GeoPySpark is able to provide an interface into the GeoTrellis and GeoMesa frameworks.
 
 Links
 -----
