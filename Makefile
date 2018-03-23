@@ -56,4 +56,4 @@ jupyter: ${DIST-ASSEMBLY}
 
 clean:
 	rm -f ${WHEEL} ${DIST-ASSEMBLY}
-	(cd geopyspark-backend && ./sbt "project geotrellis-backend" clean)
+	(cd geopyspark-backend && ./sbt "project geopyspark" clean)
