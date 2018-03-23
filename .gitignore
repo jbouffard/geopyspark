@@ -114,3 +114,7 @@ prof/
 .vscode
 
 .pytest_cache
+
+# IntelliJ
+.idea/**
+*/.idea/**
