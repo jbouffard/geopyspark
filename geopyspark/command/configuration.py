@@ -7,7 +7,7 @@ import os
 from os import path
 import argparse
 
-from geopyspark.geopyspark_constants import JAR, CWD
+from geopyspark.geopyspark_constants import JAR, CWD, VERSION
 
 
 JAR_URL = 'https://github.com/locationtech-labs/geopyspark/releases/download/v0.4.2/' + JAR
