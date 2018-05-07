@@ -785,10 +785,37 @@ class Metadata(object):
                                                self.tile_layout, self.layout_definition)
 
 
+def produce_tiled_layer(value):
+    from . import TiledRasterLayer
+    from . import LayerType
+    import numpy as np
+
+    arr = np.zeros((4, 4)) + value
+    tile = Tile.from_numpy_array(arr)
+    pysc = get_spark_context()
+
+    rdd = pysc.parallelize([(SpatialKey(0, 0), tile)])
+
+    extent = {'xmin': 0.0, 'ymin': 0.0, 'xmax': 33.0, 'ymax': 33.0}
+    layout = {'layoutCols': 1, 'layoutRows': 1, 'tileCols': 4, 'tileRows': 4}
+    metadata = {'cellType': 'float32ud-1.0',
+                'extent': extent,
+                'crs': '+proj=longlat +datum=WGS84 +no_defs ',
+                'bounds': {
+                    'minKey': {'col': 0, 'row': 0},
+                    'maxKey': {'col': 0, 'row': 0}},
+                'layoutDefinition': {
+                    'extent': extent,
+                    'tileLayout': {'tileCols': 4, 'tileRows': 4, 'layoutCols': 1, 'layoutRows': 1}}}
+
+    return TiledRasterLayer.from_numpy_rdd(LayerType.SPATIAL, rdd, metadata)
+
+
+
 __all__ = ["Tile", "Extent", "ProjectedExtent", "TemporalProjectedExtent", "SpatialKey", "SpaceTimeKey",
            "Metadata", "TileLayout", "GlobalLayout", "LocalLayout", "LayoutDefinition", "Bounds", "RasterizerOptions",
            "zfactor_lat_lng_calculator", "zfactor_calculator", "HashPartitionStrategy", "SpatialPartitionStrategy",
-           "SpaceTimePartitionStrategy"]
+           "SpaceTimePartitionStrategy", "produce_tiled_layer"]
 
 from . import catalog
 from . import color
