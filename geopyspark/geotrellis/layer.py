@@ -33,7 +33,8 @@ from geopyspark.geotrellis import (Metadata,
                                    HashPartitionStrategy,
                                    SpatialPartitionStrategy,
                                    SpaceTimePartitionStrategy,
-                                   RasterizerOptions)
+                                   RasterizerOptions,
+                                   CropOptions)
 from geopyspark.geotrellis.histogram import Histogram
 from geopyspark.geotrellis.constants import (Operation,
                                              Neighborhood as nb,
@@ -1725,6 +1726,39 @@ class TiledRasterLayer(CachableLayer, TileLayer):
         """
 
         srdd = self.srdd.slope(zfactor_calculator)
+
+        return TiledRasterLayer(self.layer_type, srdd)
+
+    def crop(self, area_of_interest, crop_options=None):
+        """Crops this layer to the given ``area_of_interest``.
+
+        Args:
+            area_of_interest (:class:`~geopyspark.geotrellis.Extent` or ``shapely.Polygon``): The
+                area that should be cropped from layer. This can either be an ``Extent`` or a
+                shapely ``Polygon``.
+
+                Note:
+                    If the layer does not intersect the ``area_of_interest``, then an empty
+                    layer will be returned.
+
+            crop_options (:class:`~geopyspark.geotrellis.CropOptions`, optional): Options that
+                determine the behavior of the crop. If ``None``, then the default options will
+                be used.
+
+        Returns:
+            :class:`~geopyspark.geotrellis.layer.TiledRasterLayer`
+        """
+
+        crop_options = crop_options or CropOptions()
+
+        if isinstance(area_of_interest, Polygon):
+            area_of_interest = wkb.dumps(area_of_interest)
+        elif isinstance(area_of_interest, Extent):
+            area_of_interest = wkb.dumps(area_of_interest.to_polygon)
+        else:
+            raise ValueError("Could not create the area_of_interest from", area_of_interest)
+
+        srdd = self.srdd.crop(area_of_interest, crop_options)
 
         return TiledRasterLayer(self.layer_type, srdd)
 

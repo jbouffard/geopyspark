@@ -8,6 +8,7 @@ import protos.tupleMessages._
 
 import geotrellis.proj4._
 import geotrellis.raster._
+import geotrellis.raster.crop.Crop.{Options => CropOptions}
 import geotrellis.raster.distance._
 import geotrellis.raster.io.geotiff._
 import geotrellis.raster.io.geotiff.compression._
@@ -16,6 +17,7 @@ import geotrellis.raster.rasterize._
 import geotrellis.raster.render._
 import geotrellis.raster.resample.ResampleMethod
 import geotrellis.spark._
+import geotrellis.spark.crop._
 import geotrellis.spark.costdistance.IterativeCostDistance
 import geotrellis.spark.io._
 import geotrellis.spark.io.json._
@@ -81,6 +83,16 @@ abstract class TiledRasterLayer[K: SpatialComponent: JsonFormat: ClassTag: Bound
   def collectKeys(): java.util.ArrayList[Array[Byte]]
 
   def layerMetadata: String = rdd.metadata.toJson.prettyPrint
+
+  def crop(
+    area: Array[Byte],
+    options: CropOptions
+  ): TiledRasterLayer[K] =
+    withContextRDD(
+      rdd
+        .crop(WKB.read(area).envelope, options)
+        .asInstanceOf[ContextRDD[K, MultibandTile, TileLayerMetadata[K]]]
+      )
 
   def mask(wkbs: java.util.ArrayList[Array[Byte]]): TiledRasterLayer[K] = {
     val geometries: Seq[MultiPolygon] = wkbs

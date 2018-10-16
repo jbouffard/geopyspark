@@ -503,6 +503,27 @@ class RasterizerOptions(namedtuple("RasterizerOption", 'includePartial sampleTyp
         return super(cls, RasterizerOptions).__new__(cls, includePartial, sampleType)
 
 
+class CropOptions(namedtuple("CropOptions", 'clamp force')):
+    """Represents options available when cropping a ``TiledRasterLayer``.
+
+    Args:
+        clamp (bool, optional): Clamp the given area to the source boundaries. If ``False``,
+            then the resulting value might not be contained within the source layer.
+            (default: ``True``).
+        force (bool, optional): If ``True``, the resulting layer should be created immediately.
+            Otherwise, the result will be lazily computed (default: ``False``).
+
+    Attributes:
+        clamp (bool): Clamp the given area to the source boundaries
+        force (bool): Should the resulting layer be created immediately or lazily.
+    """
+
+    __slots__ = []
+
+    def __new__(cls, clamp=True, force=False):
+        return super(cls, CropOptions).__new__(cls, clamp, force)
+
+
 class Bounds(namedtuple("Bounds", 'minKey maxKey')):
     """
     Represents the grid that covers the area of the rasters in a Layer on a grid.
@@ -788,7 +809,7 @@ class Metadata(object):
 __all__ = ["Tile", "Extent", "ProjectedExtent", "TemporalProjectedExtent", "SpatialKey", "SpaceTimeKey",
            "Metadata", "TileLayout", "GlobalLayout", "LocalLayout", "LayoutDefinition", "Bounds", "RasterizerOptions",
            "zfactor_lat_lng_calculator", "zfactor_calculator", "HashPartitionStrategy", "SpatialPartitionStrategy",
-           "SpaceTimePartitionStrategy"]
+           "SpaceTimePartitionStrategy", "CropOptions"]
 
 from . import catalog
 from . import color

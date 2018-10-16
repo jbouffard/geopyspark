@@ -9,7 +9,8 @@ from geopyspark.geotrellis import (RasterizerOptions,
                                    LayoutDefinition,
                                    HashPartitionStrategy,
                                    SpatialPartitionStrategy,
-                                   SpaceTimePartitionStrategy)
+                                   SpaceTimePartitionStrategy,
+                                   CropOptions)
 
 
 from geopyspark.geotrellis.constants import ResampleMethod
@@ -147,6 +148,16 @@ class SpaceTimePartitionStrategyConverter:
 
         return ScalaTemporalStrategy.apply(obj.num_partitions, obj.bits, scala_time_unit, scala_time_resolution)
 
+class CropOptionsConverter:
+    def can_convert(self, object):
+        return isinstance(object, CropOptions)
+
+    def convert(self, obj, gateway_client):
+
+        ScalaCropOptions = JavaClass("geotrellis.raster.crop.Crop$Options$", gateway_client)
+
+        return ScalaCropOptions().apply(obj.clamp, obj.force)
+
 
 register_input_converter(CellTypeConverter(), prepend=True)
 register_input_converter(RasterizerOptionsConverter(), prepend=True)
@@ -156,3 +167,4 @@ register_input_converter(LayoutDefinitionConverter(), prepend=True)
 register_input_converter(HashPartitionStrategyConverter(), prepend=True)
 register_input_converter(SpatialPartitionStrategyConverter(), prepend=True)
 register_input_converter(SpaceTimePartitionStrategyConverter(), prepend=True)
+register_input_converter(CropOptionsConverter(), prepend=True)
