@@ -78,10 +78,10 @@ Contrusting a Pyramid Manually
 
 .. code:: python3
 
+    # TiledRasterLayers can be passed in as a list
     gps.Pyramid([tiled_layer.tile_to_layout(gps.GlobalLayout(zoom=x)) for x in range(0, 13)])
 
-.. code:: python3
-
+    # Or TiledRasterLayers can be given as a dict where the key is the zoom
     gps.Pyramid({x: tiled_layer.tile_to_layout(gps.GlobalLayout(zoom=x)) for x in range(0, 13)})
 
 Computing the Histogram of a Pyramid
@@ -93,7 +93,6 @@ within a ``Pyramid`` via the :meth:`~geopyspark.Pyramid.get_histogram` method.
 .. code:: python3
 
     hist = pyramided.get_histogram()
-    hist
 
 RDD Methods
 ~~~~~~~~~~~
@@ -131,7 +130,6 @@ resulting ``Pyramid`` will only have as many levels as the source
 
     small_pyramid = gps.Pyramid({x: tiled_layer.tile_to_layout(gps.GlobalLayout(zoom=x)) for x in range(0, 5)})
     result = pyramided + small_pyramid
-    result.levels
 
 .. _cmap:
 
@@ -163,8 +161,6 @@ installed.
 
     gps.get_colors_from_matplotlib(ramp_name="viridis")
 
-.. code:: python3
-
     gps.get_colors_from_matplotlib(ramp_name="hot", num_colors=150)
 
 From ColorTools
@@ -180,12 +176,8 @@ installed.
 .. code:: python3
 
     colors = [Color('green'), Color('red'), Color('blue')]
-    colors
-
-.. code:: python3
 
     colors_color_ramp = gps.get_colors_from_colors(colors=colors)
-    colors_color_ramp
 
 Creating a ColorMap
 ~~~~~~~~~~~~~~~~~~~

@@ -1,10 +1,10 @@
 TMS Servers
 ===========
 
-GeoPySpark is meant to work with geospatial data.  The most natural way to
-interact with these data is to display them on a map.  In order to allow for
+GeoPySpark is meant to work with geospatial data. The most natural way to
+interact with these data is to display them on a map. In order to allow for
 this interactive visualization, we provide a means to create Tile Map Service
-(TMS) servers directly from both GeoPySpark RDDs and tile catalogs.  A TMS
+(TMS) servers directly from both GeoPySpark RDDs and tile catalogs. A TMS
 server may be viewed using a web-based tool such as geojson.io_ or interacted
 with using the GeoNotebook_ Jupyter kernel. [#]_
 
@@ -22,7 +22,7 @@ Basic Example
 -------------
 
 The most straightforward use case of the TMS server is to display a singleband
-layer with some custom color map.  This is accomplished easily:
+layer with some custom color map. This is accomplished easily:
 
 .. code-block:: python
 
@@ -45,22 +45,21 @@ Of course, other color maps can be used.  See the documentation for
 
 :code:`TMS.build` can display data from catalogs—which are represented as a
 string-string pair containing the URI of the catalog root and the name of the
-layer—or from a :class:`~geopyspark.geotrellis.layer.Pyramid` object.  One may also
+layer—or from a :class:`~geopyspark.geotrellis.layer.Pyramid` object. One may also
 specify a list of any combination of these sources; more on multiple sources
 below.
 
 Once a TMS server is constructed, we need to make the contents visible by
-binding the server.  The :meth:`~geopyspark.geotrellis.tms.bind` method can
+binding the server. The :meth:`~geopyspark.geotrellis.tms.bind` method can
 take a ``host`` and/or a ``port``, where the former is a string, and the
-latter is an integer.  Providing neither will result in a TMS server
-accessible from localhost on a random port.  If the server should be
+latter is an integer. Providing neither will result in a TMS server
+accessible from localhost on a random port. If the server should be
 accessible from the outside world, a ``host`` value of ``"0.0.0.0"`` may be
 used.
 
-A call to :meth:`~geopyspark.geotrellis.tms.bind` is then followed by a call
-to :meth:`~geopyspark.geotrellis.tms.url_pattern`, which provides a string
-that gives the template for the tiles furnished by the TMS server.  This
-template string may be copied directly into geojson.io_, for example.  When
+A call to ``bind`` is then followed by a call to :meth:`~geopyspark.geotrellis.tms.url_pattern`, which provides a string
+that gives the template for the tiles furnished by the TMS server. This
+template string may be copied directly into geojson.io_, for example. When
 the TMS server is no longer needed, its resources can be freed by a call to
 :meth:`~geopyspark.geotrellis.tms.unbind`.
 
@@ -88,9 +87,9 @@ Custom Rendering Functions
 --------------------------
 
 For the cases when more than a simple color map needs to be applied, one may
-also specify a custom rendering function. [#]_  There are two methods for
+also specify a custom rendering function. [#]_ There are two methods for
 custom rendering depending on whether one is rendering a single layer or
-compositing multiple layers.  We address each in turn.
+compositing multiple layers. We address each in turn.
 
 Rendering Single Layers
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -102,7 +101,7 @@ the TMS server.
 
 The general approach is to develop a function taking a
 :class:`~geopyspark.geotrellis.Tile` that returns a byte array containing the
-resulting image, encoded as PNG or JPG.  The following example uses this
+resulting image, encoded as PNG or JPG. The following example uses this
 rendering function approach to apply the same simple color map as above.
 
 .. code-block:: python
@@ -188,8 +187,8 @@ rendering function approach to apply the same simple color map as above.
    tms = gps.TMS.build(nlcd_pyramid, display=render_nlcd)
 
 You will likely observe noticeably slower performance compared to the earlier
-example.  This is because the contents of each tile must be transferred from
-the JVM to the Python environment prior to rendering.  If performance is
+example. This is because the contents of each tile must be transferred from
+the JVM to the Python environment prior to rendering. If performance is
 important to you, and a color mapping solution is available, please use that
 approach.
 
@@ -198,11 +197,11 @@ Compositing Multiple Layers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 It is also possible to combine data from various sources at the time of
-display.  Of course, one could use map algebra to produce a composite layer,
+display. Of course, one could use map algebra to produce a composite layer,
 but if the input layers are large, this could potentially be a time-consuming
-operation.  The TMS server allows for a list of sources to be supplied; these
+operation. The TMS server allows for a list of sources to be supplied; these
 may be any combination of :class:`~geopyspark.geotrellis.layer.Pyramid`
-objects and catalogs.  We then may supply a function that takes a list of
+objects and catalogs. We then may supply a function that takes a list of
 :class:`~geopyspark.geotrellis.Tile` instances and produces the bytes of an
 image as in the single-layer case.
 
@@ -230,7 +229,7 @@ some of the helper functions from the previous example.
       elev = f(grid512, grid512)
 
       land_use = tiles[1].cells[0]
-    
+
       arr = land_use
       arr[elev < 1371] = 0
 
@@ -241,12 +240,12 @@ some of the helper functions from the previous example.
       img = Image.fromarray(rgba, mode='RGBA')
 
       return img
-    
+
    tms = gps.TMS.build([ned_pyramid, nlcd_pyramid], display=comp)
 
 This example shows the major pitfall likely to be encountered in this
-approach: tiles of different size must be somehow combined.  NLCD tiles are
-512x512, while the National Elevation Data (NED) tiles are 256x256.  In this
+approach: tiles of different size must be somehow combined. NLCD tiles are
+512x512, while the National Elevation Data (NED) tiles are 256x256. In this
 example, the NED data is (bilinearly) resampled using scipy's ``interp2d``
 function to the proper size.
 
@@ -256,7 +255,7 @@ Debugging Considerations
 Be aware that if there are problems in the rendering or compositing functions,
 the TMS server will tend to produce empty images, which can result in a silent
 failure of a layer to display, or odd exceptions in programs expecting
-meaningful images, such as GeoNotebook.  It is advisable to thoroughly test
+meaningful images, such as GeoNotebook. It is advisable to thoroughly test
 these rendering functions ahead of deployment, as errors encountered in their
 use will be largely invisible.
 

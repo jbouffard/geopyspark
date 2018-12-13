@@ -149,11 +149,6 @@ supplied is a ``URI``, the name of the layer, and the layer to be saved.
 
 .. code:: python3
 
-    # The zoom level which will be saved
-    spatial_tiled_layer.zoom_level
-
-.. code:: python3
-
     # This will create a catalog called, "spatial-catalog" in the /tmp directory.
     # Within it, a layer named, "spatial-layer" will be saved.
     gps.write(uri='file:///tmp/spatial-catalog', layer_name='spatial-layer', tiled_raster_layer=spatial_tiled_layer)
@@ -165,11 +160,6 @@ When saving a spatial-temporal layer, one needs to consider how the
 records within the catalog will be spaced; which in turn, determines the
 resolution of index. The ``TimeUnit`` enum class contains all available
 units of time that can be used to space apart data in the catalog.
-
-.. code:: python3
-
-    # The zoom level which will be saved
-    space_time_tiled_layer.zoom_level
 
 .. code:: python3
 
@@ -210,11 +200,6 @@ It is possible to retrieve the :class:`~geopyspark.geotrellis.Metadata` for a la
 without reading in the whole layer. This is done using the
 :meth:`~geopyspark.geotrellis.catalog.read_layer_metadata` function.
 There is no difference between spatial and spatial-temporal layers when using this function.
-
-.. code:: python3
-
-    # Metadata from the TiledRasterLayer
-    spatial_tiled_layer.layer_metadata
 
 .. code:: python3
 
@@ -318,8 +303,6 @@ given are in the same projection.
     # Creates a Polygon from the cropped Extent of the Layer
     poly = box(layer_extent.xmin+100, layer_extent.ymin+100, layer_extent.xmax-100, layer_extent.ymax-100)
 
-.. code:: python3
-
     # Returns the region of the layer that was intersected by the Polygon at zoom level 11.
     gps.query(uri="file:///tmp/spatial-catalog",
               layer_name="spatial-layer",
@@ -422,13 +405,16 @@ then an empty ``TiledRasterLayer`` will be returned.
 AttributeStore
 --------------
 
-When writing a layer, GeoPySpark uses an :class:`~geopyspark.geotrellis.catalog.AttributeStore` to write layer metadata required to read and query the layer later.
-This class can be used outside of catalog ``write`` and ``query`` functions to inspect available layers and store additional, user defined, attributes.
+When writing a layer, GeoPySpark uses an :class:`~geopyspark.geotrellis.catalog.AttributeStore` to
+write layer metadata required to read and query the layer later. This class can be used outside of
+catalog's ``write`` and ``query`` functions to inspect available layers and store additional, user
+defined, attributes.
 
 Creating AttributeStore
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-:class:`~geopyspark.geotrellis.catalog.AttributeStore` can be created from the same ``URI`` that is given to ``write`` and ``query`` functions.
+``AttributeStore`` can be created from the same ``URI`` that is given to
+``write`` and ``query`` functions.
 
 .. code:: python3
 
@@ -450,8 +436,10 @@ Creating AttributeStore
 User Defined Attributes
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-Internally :class:`~geopyspark.geotrellis.catalog.AttributeStore` is a key-value store where key is a tuple of layer name and zoom and values are encoded as JSON.
-The layer metadata is stored under attribute named ``metadata``. Care should be taken to not overwrite this attribute.
+Internally ``AttributeStore`` is a key-value store where key is a tuple of
+layer name and zoom and values are encoded as JSON. The layer metadata is
+stored under attribute named ``metadata``. Care should be taken to not
+overwrite this attribute.
 
 .. code:: python3
 
@@ -483,15 +471,17 @@ The layer metadata is stored under attribute named ``metadata``. Care should be 
  }
 
 
-Otherwise you are free to store any additional attribute that is associated with the layer.
-:class:`~geopyspark.geotrellis.catalog.AttributeStore.Attributes` provides ``write`` and ``read`` functions that accept and provide a dictionary.
+Otherwise you are free to store any additional attribute that is associated
+with the layer. :class:`~geopyspark.geotrellis.catalog.AttributeStore.Attributes`
+provides ``write`` and ``read`` functions that accept and provide a dictionary.
 
 .. code:: python3
 
    attributes.write("notes", {'a': 3, 'b': 5})
    notes_dict = attributes.read("notes")
 
-A common use case for this is to store the layer histogram when writing a layer so it may be used for rendering later.
+A common use case for this is to store the layer histogram when writing a layer
+so it may be used for rendering later.
 
 .. code:: python3
 
@@ -517,11 +507,14 @@ A common use case for this is to store the layer histogram when writing a layer 
 AttributeStore Caching
 ~~~~~~~~~~~~~~~~~~~~~~
 
-An instance of :class:`~geopyspark.geotrellis.catalog.AttributeStore` keeps an in memory cache of attributes recently accessed.
-This is done because a common access pattern to check layer existence, read the layer and decode the layer will produce repeated requests for layer metadata.
-Depending on the backend used this may add considerable overhead and expense.
+An instance of ``AttributeStore`` keeps an in memory cache of attributes
+recently accessed. This is done because a common access pattern to check
+layer existence, read the layer and decode the layer will produce repeated
+requests for layer metadata. Depending on the backend used this may add
+considerable overhead and expense.
 
-When writing a workflow that places heavy demand on :class:`~geopyspark.geotrellis.catalog.AttributeStore` reading it is worth while keeping track of a class instance and reusing it
+When writing a workflow that places heavy demand on ``AttributeStore`` reading
+it is worth while keeping track of a class instance and reusing it
 
 .. code:: python3
 
