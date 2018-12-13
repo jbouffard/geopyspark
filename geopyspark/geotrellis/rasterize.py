@@ -4,6 +4,7 @@ from geopyspark.geotrellis.constants import LayerType, CellType
 from geopyspark.geotrellis.layer import TiledRasterLayer
 from geopyspark.geotrellis.protobufserializer import ProtoBufSerializer
 
+from geopyspark.vector_pipe import Feature
 from geopyspark.vector_pipe.vector_pipe_protobufcodecs import (feature_cellvalue_decoder,
                                                                feature_cellvalue_encoder)
 

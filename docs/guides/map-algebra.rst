@@ -1,24 +1,24 @@
 Map Algebra
 ===========
 
-Given a set of raster layers, it may be desirable to combine and filter
-the content of those layers. This is the function of *map algebra*. Two
+Given a set of layers, it may be desirable to combine and filter
+their contents of those layers. This is the function of *map algebra*. Two
 classes of map algebra operations are provided by GeoPySpark: *local*
 and *focal* operations. Local operations individually consider the
-pixels or cells of one or more rasters, applying a function to the
+pixels or cells of one or more rasters, and applying a function to the
 corresponding cell values. For example, adding two rasters' pixel values
 to form a new layer is a local operation.
 
-Focal operations consider a region around each pixel of an input raster
-and apply an operation to each region. The result of that operation is
+Focal operations consider a region around each pixel of an input raster,
+and they apply an operation to the region. The result of that operation is
 stored in the corresponding pixel of the output raster. For example, one
 might weight a 5x5 region centered at a pixel according to a 2d Gaussian
-to effect a blurring of the input raster. One might consider this
-roughly equivalent to a 2d convolution operation.
+to effect a blurring of the input raster. This is roughly equivalent to
+a 2d convolution operation.
 
-**Note:** Map algebra operations work only on ``TiledRasterLayer``\ s,
-and if a local operation requires multiple inputs, those inputs must
-have the same layout and projection.
+**Note:** Map algebra operations work only on ``TiledRasterLayer``\ s
+and ``Pyramid``\s; and if a local operation requires multiple inputs,
+those inputs must have the same layout and projection.
 
 Before begining, all examples in this guide need the following boilerplate
 code:
@@ -69,10 +69,9 @@ Local operations on ``TiledRasterLayer``\ s can use ``int``\ s,
 
     2 ** tiled_layer
 
-A :class:`~geopyspark.geotrellis.layer.Pyramid` can also be used in local
-operations. The types that can be used in local operations with
-``Pyramid``\ s are: ``int``\ s, ``float``\ s, ``TiledRasterLayer``\ s,
-and other ``Pyramid``\ s.
+``Pyramid``\s can also be used in local operations. The types that
+can be used in local operations with ``Pyramid``\ s are: ``int``\ s,
+``float``\ s, ``TiledRasterLayer``\ s, and other ``Pyramid``\ s.
 
 **Note**: Like with ``TiledRasterLayer``, performing calculations on
 multiple ``Pyramid``\ s or ``TiledRasterLayer``\ s means they must all
@@ -191,13 +190,9 @@ In addition to local and focal operations, polygonal summaries can also
 be performed on ``TiledRasterLayer``\ s. These are operations that are
 executed in the areas that intersect a given geometry and the layer.
 
-**Note**: It is important the given geometry is in the same projection
-as the layer. If they are not, then either incorrect and/or only partial
+**Note**: It is important that the given geometry is in the same projection
+as the layer. If they are not, then either incorrect and/or partial
 results will be returned.
-
-.. code:: python3
-
-    tiled_layer.layer_metadata
 
 Polygonal Min
 ~~~~~~~~~~~~~
@@ -234,16 +229,15 @@ Polygonal Mean
 Cost Distance
 ^^^^^^^^^^^^^^
 
-:meth:`~geopyspark.geotrellis.cost_distance.cost_distance` is an iterative
-method for approximating the weighted distance from a raster cell to a given
-geometry. The ``cost_distance`` function takes in a geometry and a
-“friction layer” which essentially describes how difficult it is to traverse
-each raster cell. Cells that fall within the geometry have a final cost of
-zero, while friction cells that contain noData values will correspond to
-noData values in the final result. All other cells have a value that describes
-the minimum cost of traversing from that cell to the geometry. If the friction
-layer is uniform, this function approximates the Euclidean distance, modulo some
-scalar value.
+The ``cost_distance`` function an iterative operation for approximating
+the weighted distance from a raster cell to a given geometry. This function
+takes in a geometry and a “friction layer” which essentially describes how
+difficult it is to traverse each raster cell. Cells that fall within the
+geometry have a final cost of zero, while friction cells that contain noData
+values will correspond to noData values in the final result. All other cells
+have a value that describes the minimum cost of traversing from that cell to
+the geometry. If the friction layer is uniform, this function approximates the
+Euclidean distance, for some modulo scalar value.
 
 .. code:: python3
 
@@ -263,16 +257,17 @@ scalar value.
 
     gps.cost_distance(friction_layer=cost_distance_tiled_layer, geometries=[Point(0.0, 5.0)], max_distance=144000.0)
 
+.. _rasterization:
+
 Rasterization
 ^^^^^^^^^^^^^^
 
 It may be desirable to convert vector data into a raster layer. For
-this, we provide the :meth:`~geopyspark.geotrellis.rasterize.rasterize`
-function, which determines the set of pixel values covered by each vector
-element, and assigns a supplied value to that set of pixels in a target raster.
-If, for example, one had a set of polygons representing counties in the US, and
-a value for, say, the median income within each county, a raster could be made
-representing these data.
+this, we provide the ``rasterize`` function, which determines the set of
+pixel values covered by each vector element, and assigns a supplied value
+to that set of pixels in a target raster.  If, for example, one had a set of
+polygons representing counties in the US, and a value for, say, the median income
+within each county, a raster could be made representing these data.
 
 GeoPySpark's ``rasterize`` function can take a ``[shapely.geometry]``,
 ``(shapely.geometry)``, or a ``PythonRDD[shapely.geometry]``. These geometries will be
@@ -289,8 +284,6 @@ Rasterize MultiPolygons
     raster_poly_3 = box(13.5, 17.0, 30.0, 20.0)
 
     raster_multi_poly = MultiPolygon([raster_poly_1, raster_poly_2, raster_poly_3])
-
-.. code:: python3
 
     # Creates a TiledRasterLayer with a CRS of EPSG:4326 at zoom level 5.
     gps.rasterize(geoms=[raster_multi_poly], crs=4326, zoom=5, fill_value=1)
@@ -313,8 +306,6 @@ Rasterize LineStrings
     line_1 = LineString(((0.0, 0.0), (0.0, 5.0)))
     line_2 = LineString(((7.0, 5.0), (9.0, 12.0), (12.5, 15.0)))
     line_3 = LineString(((12.0, 13.0), (14.5, 20.0)))
-
-.. code:: python3
 
     # Creates a TiledRasterLayer whose cells have a data type of int16.
     gps.rasterize(geoms=[line_1, line_2, line_3], crs=4326, zoom=3, fill_value=2, cell_type=gps.CellType.INT16)

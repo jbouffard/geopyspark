@@ -38,8 +38,6 @@ bands, even if the original raster just contained one.
     # The resulting Tile will set -10 as the no_data_value for the raster
     gps.Tile.from_numpy_array(numpy_array=arr, no_data_value=-10)
 
-.. code:: python3
-
     # The resulting Tile will have no no_data_value
     gps.Tile.from_numpy_array(numpy_array=arr)
 
@@ -52,13 +50,10 @@ Thus, depending on the system in use, the values that outline the
 :class:`~geopyspark.geotrellis.Extent` can vary. ``Extent`` can also be refered to as a *bounding
 box*.
 
-**Note**: The values within the ``Extent`` must be ``float``\ s and not
-``double``\ s.
-
 .. code:: python3
 
+    # Creates an Extent that has an area of 100.0
     extent = gps.Extent(0.0, 0.0, 10.0, 10.0)
-    extent
 
 ProjectedExtent
 ---------------
@@ -72,8 +67,6 @@ used to indicate the CRS of the ``ProjectedExtent``.
     # Using an EPSG code
 
     gps.ProjectedExtent(extent=extent, epsg=3857)
-
-.. code:: python3
 
     # Using a Proj4 String
 
@@ -96,8 +89,8 @@ of ``datetime.datetime``.
 TileLayout
 ----------
 
-:class:`~geopyspark.geotrellis.TileLayout` describes the grid which represents how rasters are
-orginized and assorted in a layer. ``layoutCols`` and ``layoutRows``
+:class:`~geopyspark.geotrellis.TileLayout` represents the grid which shows
+how rasters are orginized and assorted in a layer. ``layoutCols`` and ``layoutRows``
 detail how many columns and rows the grid itself has, respectively.
 While ``tileCols`` and ``tileRows`` tell how many columns and rows each
 individual raster has.
@@ -112,8 +105,8 @@ individual raster has.
 LayoutDefinition
 ----------------
 
-:class:`~geopyspark.geotrellis.LayoutDefinition` describes both how the rasters are orginized in a
-layer as well as the area covered by the grid.
+:class:`~geopyspark.geotrellis.LayoutDefinition` represents both how the rasters
+are orginized in a layer as well as the area covered by the grid.
 
 .. code:: python3
 
@@ -133,10 +126,10 @@ produce a layout based on the data they are given.
 LocalLayout
 ~~~~~~~~~~~
 
-:class:`~geopyspark.geotrellis.LocalLayout` is the first tiling strategy that produces a layout
-where the grid is constructed over all of the pixels within a layer of a
-given tile size. The resulting layout will match the original resolution
-of the cells within the rasters.
+:class:`~geopyspark.geotrellis.LocalLayout` is the first tiling strategy and
+it produces a layout where the grid is constructed over all of the pixels
+within a layer of a given tile size. The resulting layout will match the
+original resolution of the cells within the rasters.
 
 **Note**: This layout **cannot be used for creating display layers.
 Rather, it is best used for layers where operations and analysis will be
@@ -147,12 +140,8 @@ performed.**
     # Creates a LocalLayout where each tile within the grid will be 256x256 pixels.
     gps.LocalLayout()
 
-.. code:: python3
-
     # Creates a LocalLayout where each tile within the grid will be 512x512 pixels.
     gps.LocalLayout(tile_size=512)
-
-.. code:: python3
 
     # Creates a LocalLayout where each tile within the grid will be 256x512 pixels.
     gps.LocalLayout(tile_cols=256, tile_rows=512)
@@ -160,10 +149,10 @@ performed.**
 GlobalLayout
 ~~~~~~~~~~~~
 
-The other tiling strategy is :class:`~geopyspark.geotrellis.GlobalLayout` which makes a layout where
-the grid is constructed over the global extent CRS. The cell resolution
-of the resulting layer be multiplied by a power of 2 for the CRS. Thus,
-using this strategy will result in either up or down sampling of the
+The other tiling strategy is :class:`~geopyspark.geotrellis.GlobalLayout` which makes
+a layout where the grid is constructed over the global extent CRS. The
+cell resolution of the resulting layer be multiplied by a power of 2 for
+the CRS. Thus, using this strategy will result in either up or down sampling of the
 original raster.
 
 **Note**: This layout strategy **should be used when the resulting layer
@@ -173,8 +162,6 @@ is to be dispalyed in a TMS server.**
 
     # Creates a GobalLayout instance with the default values
     gps.GlobalLayout()
-
-.. code:: python3
 
     # Creates a GlobalLayout instance for a zoom of 12
     gps.GlobalLayout(zoom=12)
@@ -188,8 +175,8 @@ level, then the ``zoom`` parameter must be set.
 SpatialKey
 ----------
 
-:class:`~geopyspark.geotrellis.SpatialKey`\ s describe the positions of rasters within the grid of
-the layout. This grid is a 2D plane where the location of a raster is
+:class:`~geopyspark.geotrellis.SpatialKey`\ s describe the positions of rasters within
+the grid of the layout. This grid is a 2D plane where the location of a raster is
 represented by a pair of coordinates, ``col`` and ``row``, respectively.
 As its name and attributes suggest, ``SpatialKey`` deals solely with
 spatial data.
@@ -201,9 +188,9 @@ spatial data.
 SpaceTimeKey
 ------------
 
-Like ``SpatialKey``\ s, :class:`~geopyspark.geotrellis.SpaceTimeKey`\ s describe the position of a
-raster in a layout. However, the grid is a 3D plane where a location of
-a raster is represented by a pair of coordinates, ``col`` and ``row``,
+Like ``SpatialKey``\ s, :class:`~geopyspark.geotrellis.SpaceTimeKey`\ s are
+the position of a raster in a layout. However, the grid is a 3D plane where
+a location of a raster is represented by a pair of coordinates, ``col`` and ``row``,
 as well as a z value that represents a point in time called,
 ``instant``. Like the ``instant`` in ``TemporalProjectedExtent``, this
 is also an instance of ``datetime.datetime``. Thus, ``SpaceTimeKey``\ s
@@ -216,7 +203,7 @@ deal with spatial-temporal data.
 Bounds
 ------
 
-:class:`~geopyspark.geotrellis.Bounds` represents the the extent of the layout grid in terms of
+:class:`~geopyspark.geotrellis.Bounds` is the extent of the layout grid in terms of
 keys. It has both a ``minKey`` and a ``maxKey`` attributes. These can
 either be a ``SpatialKey`` or a ``SpaceTimeKey`` depending on the type
 of data within the layer. The ``minKey`` is the left, uppermost cell in
@@ -231,8 +218,6 @@ the grid and the ``maxKey`` is the right, bottommost cell.
 
     bounds = gps.Bounds(min_spatial_key, max_spatial_key)
     bounds
-
-.. code:: python3
 
     # Creating a Bounds from SpaceTimeKeys
 

@@ -41,7 +41,7 @@ Layers Are More Than RDDs
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 We refer to the Python wrapper classes as layers and not ``RDD``\ s for
-two reasons: first, neither ``RasterLayer`` or ``TiledRasterLayer``
+two reasons: first, neither ``RasterLayer`` nor ``TiledRasterLayer``
 actually extends PySpark's ``RDD`` class; but more importantly, these
 classes contain more information than just the ``RDD``. When we refer to
 a “layer”, we mean both the ``RDD`` and its attributes.
@@ -56,7 +56,7 @@ RasterLayer
 ~~~~~~~~~~~
 
 The ``RasterLayer`` class deals with *untiled data*—that is, the
-elements of the layer have not been normalized into a single unified
+elements of the layer have not been normalized into a single, unified
 layout. Each raster element may have distinct resolutions or sizes; the
 extents of the constituent rasters need not follow any orderly pattern.
 Essentially, a ``RasterLayer`` stores “raw” data, and its main purpose
@@ -154,9 +154,6 @@ value to ``Tile``.
 .. code:: python3
 
     python_rdd = raster_layer.to_numpy_rdd()
-    python_rdd
-
-.. code:: python3
 
     python_rdd.first()
 
@@ -180,9 +177,6 @@ converting ``TemporalProjectedExtent`` to ``ProjectedExtent``.
 
     space_time_rdd = pysc.parallelize([temporal_projected_extent, tile])
     space_time_layer = gps.RasterLayer.from_numpy_rdd(layer_type=gps.LayerType.SPACETIME, numpy_rdd=space_time_rdd)
-    space_time_layer
-
-.. code:: python3
 
     # Converting the SpaceTime layer to a Spatial layer
 
@@ -202,14 +196,9 @@ found within the layer.
 
     # Collecting Metadata with the default LocalLayout()
     metadata = raster_layer.collect_metadata()
-    metadata
-
-.. code:: python3
 
     # Collecting Metadata with the default GlobalLayout()
     raster_layer.collect_metadata(layout=gps.GlobalLayout())
-
-.. code:: python3
 
     # Collecting Metadata with a LayoutDefinition
     extent = gps.Extent(0.0, 0.0, 33.0, 33.0)
@@ -227,13 +216,8 @@ method does not sample past the tiles' boundaries.
 
 .. code:: python3
 
-    # The CRS of the layer before reprojecting
-    metadata.crs
-
-.. code:: python3
-
-    # The CRS of the layer after reprojecting
-    raster_layer.reproject(target_crs=3857).collect_metadata().crs
+    # Reprojecting the layer to WebMercator
+    raster_layer.reproject(target_crs=3857)
 
 Tiling Data to a Layout
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -309,7 +293,7 @@ Creating TiledRasterLayers
 For this guide, we will just go over one initialization method for
 ``TiledRasterLayer``, ``from_numpy_rdd``. However, there are other ways
 to create this class. These additional creation strategies can be found
-in the [map algebra guide].
+in the :ref:`rasterization` guide.
 
 From PySpark RDD
 ^^^^^^^^^^^^^^^^
@@ -362,7 +346,7 @@ Like with ``RasterLayer``, not all methods within this class will be
 covered in this guide. More information on the methods that deal with
 the visualization of the contents of the layer can be found in
 :ref:`visualizing`; and those that deal with
-map algebra can be found in the [map algebra guide].
+map algebra can be found in the :ref:`rasterization` section.
 
 Converting to a Python RDD
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -376,9 +360,6 @@ This will convert all of the first values within each tuple to either
 
     python_rdd = tiled_raster_layer.to_numpy_rdd()
 
-.. code:: python3
-
-    python_rdd.first()
 
 SpaceTime Layer to Spatial Layer
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -395,17 +376,6 @@ This changes the keys of the ``RDD`` within the layer by converting
 
     space_time_tiled_layer.to_spatial_layer()
 
-Repartitioning
-^^^^^^^^^^^^^^
-
-While not an ``RDD``, ``TiledRasterLayer`` does contain an underlying
-``RDD``, and thus, it can be repartitioned using the
-:meth:`~geopyspark.geotrellis.layer.TiledRasterLayer.repartition` method.
-
-.. code:: python3
-
-    # Repartition the internal RDD to have 120 partitions
-    tiled_raster_layer.repartition(num_partitions=120)
 
 Lookup
 ^^^^^^
@@ -440,14 +410,12 @@ or more Shapely geometries.
 
     tiled_raster_layer.mask(geometries=mask)
 
-.. code:: python3
-
+    # Multiple Polygons can be given to mask the layer
     mask_2 = box(layer_extent.xmin + 50,
                  layer_extent.ymin + 50,
                  layer_extent.xmax - 20,
                  layer_extent.ymax - 20)
 
-    # Multiple Polygons can be given to mask the layer
     tiled_raster_layer.mask(geometries=[mask, mask_2])
 
 Normalize
@@ -497,15 +465,8 @@ changed to 0 since the area being represented changes to just the tiles.
 
 .. code:: python3
 
-    # The zoom_level and crs of the TiledRasterLayer before reprojecting
-    tiled_raster_layer.zoom_level, tiled_raster_layer.layer_metadata.crs
-
-.. code:: python3
-
+    # Reproject the layer to WebMercator
     reprojected_tiled_raster_layer = tiled_raster_layer.reproject(target_crs=3857)
-
-    # The zoom_level and crs of the TiledRasterLayer after reprojecting
-    reprojected_tiled_raster_layer.zoom_level, reprojected_tiled_raster_layer.layer_metadata.crs
 
 Stitching
 ^^^^^^^^^
@@ -519,7 +480,7 @@ crash due to the size of the resulting ``Tile``.
 .. code:: python3
 
     # Creates a Tile with an underlying numpy array with a size of (1, 6144, 1536).
-    tiled_raster_layer.stitch().cells.shape
+    tiled_raster_layer.stitch()
 
 Saving a Stitched Layer
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -547,9 +508,11 @@ is stitched.
 
     tiled_raster_layer.save_stitched(path='/tmp/cropped-stitched.tif', crop_bounds=sub_exent)
 
+In addition to the sub ``Extent``, one can also choose how many cols and rows
+will be in the saved in the GeoTiff.
+
 .. code:: python3
 
-    # In addition to the sub Extent, one can also choose how many cols and rows will be in the saved in the GeoTiff.
     tiled_raster_layer.save_stitched(path='/tmp/cropped-stitched-2.tif',
                                      crop_bounds=sub_exent,
                                      crop_dimensions=(1000, 1000))
@@ -570,17 +533,11 @@ retiling a ``TiledRasterLayer``.
     # Original zoom_level of the source TiledRasterLayer
     tiled_raster_layer.zoom_level
 
-.. code:: python3
-
     # zoom_level will be lost in the resulting TiledRasterlayer
     tiled_raster_layer.tile_to_layout(layout=gps.LocalLayout())
 
-.. code:: python3
-
     # zoom_level will be changed in the resulting TiledRasterLayer
     tiled_raster_layer.tile_to_layout(layout=gps.GlobalLayout(), target_crs=3857)
-
-.. code:: python3
 
     # zoom_level will reamin the same in the resulting TiledRasterLayer
     tiled_raster_layer.tile_to_layout(layout=gps.GlobalLayout(zoom=11))
@@ -704,7 +661,6 @@ Not all ``Operation``\s are supported. The following ones can be used in
    unioned_layer.aggregate_by_cell(operation=gps.Operation.MAX)
 
 
-
 General Methods
 ---------------
 
@@ -748,8 +704,6 @@ reading them in.
     # Selecting the second band from the layer
     multiband_raster_layer.bands(1)
 
-.. code:: python3
-
     # Selecting the first and second bands from the layer
     multiband_raster_layer.bands([0, 1])
 
@@ -768,23 +722,20 @@ values' bands will be ordered based on their position of their respective layer.
 .. code:: python3
 
     # Setting up example RDD
+
     twos = np.ones((1, 16, 16), dtype='int') + 1
     twos_tile = gps.Tile.from_numpy_array(numpy_array=np.array(twos), no_data_value=-500)
 
     twos_rdd = pysc.parallelize([(projected_extent, twos_tile)])
     twos_raster_layer = gps.RasterLayer.from_numpy_rdd(layer_type=gps.LayerType.SPATIAL, numpy_rdd=twos_rdd)
 
-.. code:: python3
+    # The resulting values of the layer will have 2 bands: the first will be all ones,
+    # and the last band will be all twos
+    gps.combine_bands(layers=[multiband_raster_layer, twos_raster_layer])
 
-   # The resulting values of the layer will have 2 bands: the first will be all ones,
-   # and the last band will be all twos
-   gps.combine_bands(layers=[multiband_raster_layer, twos_raster_layer])
-
-.. code:: python3
-
-   # The resulting values of the layer will have 2 bands: the first will be all twos and the
-   # other band will be all ones
-   gps.combine_bands(layers=[twos_raster_layer, multiband_raster_layer])
+    # The resulting values of the layer will have 2 bands: the first will be all twos and the
+    # other band will be all ones
+    gps.combine_bands(layers=[twos_raster_layer, multiband_raster_layer])
 
 
 Collecting the Keys of a Layer
@@ -817,7 +768,7 @@ A single ``datetime.datetime`` instance can be used to filter the layer.
 If that is the case then only exact matches with the given time will be
 kept.
 
-.. code:: python
+.. code:: python3
 
    space_time_layer.filter_by_times(time_intervals=[instant])
 
@@ -854,15 +805,11 @@ will be no ``noData`` value for the resulting rasters.
     # The data type of the cells before converting
     metadata.cell_type
 
-.. code:: python3
-
     # Changing the cell type to int8 with a noData value of -100.
-    raster_layer.convert_data_type(new_type=gps.CellType.INT8, no_data_value=-100).collect_metadata().cell_type
-
-.. code:: python3
+    raster_layer.convert_data_type(new_type=gps.CellType.INT8, no_data_value=-100)
 
     # Changing the cell type to int32 with no noData value.
-    raster_layer.convert_data_type(new_type=gps.CellType.INT32).collect_metadata().cell_type
+    raster_layer.convert_data_type(new_type=gps.CellType.INT32)
 
 Reclassify Cell Values
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -874,16 +821,10 @@ the ``data_type`` of the cells also needs to be given. This is either
 
 .. code:: python3
 
-    # Values of the first tile before being reclassified
-    multiband_raster_layer.to_numpy_rdd().first()[1]
-
-.. code:: python3
-
     # Change all values greater than or equal to 1 to 10
     reclassified = multiband_raster_layer.reclassify(value_map={1: 10},
                                                      data_type=int,
                                                      classification_strategy=gps.ClassificationStrategy.GREATER_THAN_OR_EQUAL_TO)
-    reclassified.to_numpy_rdd().first()[1]
 
 
 Merging the Values of a Layer Together
@@ -919,13 +860,12 @@ should be changed:
     # Resutling layer has no no_data_value
     no_no_data_layer = create_layer()
 
-.. code:: python3
 
-   # The resulting merged value will be all zeros since -1 is the noData value
-   no_data_layer.merge()
+    # The resulting merged value will be all zeros since -1 is the noData value
+    no_data_layer.merge()
 
-   # The resulting merged value will be all -1's as ``no_data_value`` was set.
-   no_no_data_layer.merge()
+    # The resulting merged value will be all -1's as ``no_data_value`` was set.
+    no_no_data_layer.merge()
 
 
 Mapping Over the Cells
@@ -933,10 +873,10 @@ Mapping Over the Cells
 
 It is possible to work with the cells within a layer directly via the
 ``map_cells`` method. This method takes a function that expects a numpy
-array and a noData value as parameters, and returns a new numpy array.
+array and a ``noData`` value as parameters, and returns a new numpy array.
 Thus, the function given would have the following type signature:
 
-.. code:: python
+.. code:: python3
 
     def input_function(numpy_array: np.ndarray, no_data_value=None) -> np.ndarray
 
@@ -949,18 +889,18 @@ together all functions to avoid unnecessary serialization overhead.
 
 .. code:: python3
 
+    # Mapping with a single funciton
+
     def add_one(cells, _):
         return cells + 1
 
-    # Mapping with a single funciton
     raster_layer.map_cells(add_one)
 
-.. code:: python3
+    # Chaning together two functions to be mapped
 
     def divide_two(cells, _):
         return (add_one(cells) / 2)
 
-    # Chaning together two functions to be mapped
     raster_layer.map_cells(divide_two)
 
 Mapping Over Tiles
@@ -971,7 +911,7 @@ Like ``map_cells``, ``map_tiles`` maps a given function over all of the
 ``Tile`` and returns a ``Tile``. Therefore, the input function's type
 signature would be this:
 
-.. code:: python
+.. code:: python3
 
     def input_function(tile: Tile) -> Tile
 
@@ -990,13 +930,13 @@ together all functions to avoid unnecessary serialization overhead.
 Calculating the Histogram for the Layer
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-It is possible to calculate the histogram of a layer either by using the
+One can calculate the histogram of a layer either by using the
 ``get_histogram`` or the ``get_class_histogram`` method. Both of these
-methods produce a ``Histogram``, however, the way the data is
-represented within the resulting histogram differs depending on the
-method used. ``get_histogram`` will produce a histogram whose values are
-``float``\ s. Whereas ``get_class_histogram`` returns a histogram whose
-values are ``int``\ s.
+methods produce a :class:`~geopyspark.geotrellis.histrogram.Histogram`,
+however, the way the data is represented within the resulting histogram
+differs depending on the method used. ``get_histogram`` will produce a
+histogram whose values are ``float``\ s. Whereas ``get_class_histogram``
+returns a histogram whose values are ``int``\ s.
 
 For more informaiton on the ``Histogram`` class, please see the
 ``Histogram`` [guide].
@@ -1005,8 +945,6 @@ For more informaiton on the ``Histogram`` class, please see the
 
     # Returns a Histogram whose underlying values are floats
     tiled_raster_layer.get_histogram()
-
-.. code:: python3
 
     # Returns a Histogram whose underlying values are ints
     tiled_raster_layer.get_class_histogram()
@@ -1132,12 +1070,20 @@ different gradiant. By default, ``color_map`` is ``None``. To learn more about
 RDD Methods
 -----------
 
-As mentioned in the section on ``TiledRasterLayer``'s `repartition
-method <#repartitioning>`__, ``TiledRasterLayer`` has methods to work
-with its internal ``RDD``. This holds true for ``RasterLayer`` as well.
+As mentioned in the `How is Data Stored and Represented in GeoPySpark <#how-is-data-stored-and-represented-in-geopyspark>`__,
+both ``RasterLayer`` and ``TiledRasterLayer`` have methods that allow them
+to work with their internal ``RDD``\s.
 
 The following is a list of ``RDD`` with examples that are supported by
 both classes.
+
+Repartition
+^^^^^^^^^^^
+
+.. code:: python3
+
+    # Repartition the internal RDD to have 120 partitions
+    tiled_raster_layer.repartition(num_partitions=120)
 
 Cache
 ~~~~~

@@ -17,13 +17,9 @@ features or other patches this page gives you more info on how to do it.
 Building GeoPySpark
 -------------------
 
-Ensure you have the
-`project dependencies<https://github.com/locationtech-labs/geopyspark/blob/master/README.rst#requirements>`_
-installed on your machine.
+Ensure you have the project :ref`requirements` installed on your machine.
 
-Then follow the
-`Installing for Developers<https://github.com/locationtech-labs/geopyspark/blob/master/README.rst#installing-for-developers>`_
-instructions in the project README.
+Then follow the instructions here to build and install GeoPySpark: :ref:`installing-for-developers`.
 
 Style Guide
 -----------

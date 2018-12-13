@@ -105,7 +105,7 @@ class Histogram(object):
     def values(self):
         """Lists each indiviual value within the histogram.
 
-        This will return a list of either ``int``s or ``float``s depedning on the type of values
+        This will return a list of either ``int``\s or ``float``\s depedning on the type of values
         within the histogram.
 
         Returns:
@@ -173,7 +173,7 @@ class Histogram(object):
 
     def merge(self, other_histogram):
         """Merges this instance of ``Histogram`` with another. The resulting ``Histogram``
-        will contain values from both ``Histogram``s
+        will contain values from both ``Histogram``\s.
 
         Args:
             other_histogram (:class:`~geopyspark.geotrellis.histogram.Histogram`): The

@@ -26,19 +26,19 @@ def from_orc(source):
                 how the files are to be read in. However, **if reading a file on EMR, then
                 the access key and secret key do not need to be set**.
 
-                If using ``s3a://``, then the following ``SparkConf`` parameters need to be set:
-                    - ``spark.hadoop.fs.s3a.impl``
-                    - ``spark.hadoop.fs.s3a.access.key``
-                    - ``spark.hadoop.fs.s3a.secret.key``
+                    If using ``s3a://``, then the following ``SparkConf`` parameters need to be set:
+                        - ``spark.hadoop.fs.s3a.impl``
+                        - ``spark.hadoop.fs.s3a.access.key``
+                        - ``spark.hadoop.fs.s3a.secret.key``
 
-                If using ``s3n://``, then the following ``SparkConf`` parameters need to be set:
-                    - ``spark.hadoop.fs.s3n.access.key``
-                    - ``spark.hadoop.fs.s3n.secret.key``
+                    If using ``s3n://``, then the following ``SparkConf`` parameters need to be set:
+                        - ``spark.hadoop.fs.s3n.access.key``
+                        - ``spark.hadoop.fs.s3n.secret.key``
 
-                An alternative to passing in your S3 credentials to ``SparkConf`` would be
-                to export them as environment variables:
-                    - ``AWS_ACCESS_KEY_ID=YOUR_KEY``
-                    - ``AWS_SECRET_ACCESS_KEY_ID=YOUR_SECRET_KEY``
+                    An alternative to passing in your S3 credentials to ``SparkConf`` would be
+                    to export them as environment variables:
+                        - ``AWS_ACCESS_KEY_ID=YOUR_KEY``
+                        - ``AWS_SECRET_ACCESS_KEY_ID=YOUR_SECRET_KEY``
 
     Returns:
         :class:`~geopyspark.vector_pipe.features_collection.FeaturesCollection`

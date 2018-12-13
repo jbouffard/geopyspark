@@ -76,6 +76,8 @@ for you:
 
 For additional examples, check out the `Jupyter notebook demos <./notebook-demos>`_.
 
+.. _requirements:
+
 Requirements
 ------------
 
@@ -209,6 +211,8 @@ Contributing
 Feedback and contributions to GeoPySpark are always welcomed.
 A CLA is required for contribution, see `Contributing <docs/contributing.rst>`_ for more
 information.
+
+.. _intstalling-for-developers:
 
 Installing for Developers
 ~~~~~~~~~~~~~~~~~~~~~~~~~
