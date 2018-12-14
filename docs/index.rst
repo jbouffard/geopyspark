@@ -46,14 +46,6 @@ a need for it.
 
 
 .. toctree::
-  :maxdepth: 2
-  :caption: Home
-  :hidden:
-
-  Changelog <CHANGELOG>
-  contributing
-
-.. toctree::
   :maxdepth: 5
   :caption: User Guides
   :hidden:
@@ -64,6 +56,7 @@ a need for it.
   guides/map-algebra
   guides/visualization
   guides/tms
+  guides/partition-strategy
 
 .. toctree::
   :maxdepth: 2
@@ -71,8 +64,6 @@ a need for it.
   :glob:
   :hidden:
 
-  tutorials/ingesting-an-image
-  tutorials/reading-in-sentinel-data
   tutorials/reading-and-rasterizing-osm-data
 
 .. toctree::
