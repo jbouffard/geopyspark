@@ -16,9 +16,8 @@ close data are grouped together.
 HashPartitionStrategy
 ---------------------
 
-:class:`~geopyspark.geotrellis.HashPartitionStrategy` is
-a partition strategy that uses Spark's ``HashPartitioner``
-to partition a layer. This can be used on either ``SPATIAL``
+``HashPartitionStrategy`` is a partition strategy that uses Spark's
+``HashPartitioner`` to partition a layer. This can be used on either ``SPATIAL``
 or ``SPACETIME`` layers.
 
 Unlike ``SpatialPartitionStrategy`` and ``SpaceTimePartitionStrategy``,
@@ -44,10 +43,9 @@ There are several benefits to using a spatial partitioning strategy over the
 SpatialPartitionStrategy
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-:class:`~geopyspark.geotrellis.SpatialPartitionStrategy` will try and
-partition the ``Tile``\s of a layer so that those which are near each
-other spatially will be in the same partition. This will
-only work on ``SPATIAL`` layers.
+``SpatialPartitionStrategy`` will try and partition the ``Tile``\s of a layer so
+that those which are near each other spatially will be in the same partition.
+This will only work on ``SPATIAL`` layers.
 
 .. code:: python3
 
@@ -57,10 +55,9 @@ only work on ``SPATIAL`` layers.
 SpaceTimePartitionStrategy
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-:class:`~geopyspark.geotrellis.SpaceTimePartitionStrategy`
-will try and partition the ``Tile``\s of a layer so that those which
-are near each other spatially and temporally will be in the same partition.
-This will only work on ``SPACETIME`` layers.
+``SpaceTimePartitionStrategy`` will try and partition the ``Tile``\s of a layer
+so that those which are near each other spatially and temporally will be in the
+same partition.  This will only work on ``SPACETIME`` layers.
 
 .. code:: python3
 

@@ -7,11 +7,11 @@ and write to/from GeoTrellis layers.
 Before begining, all examples in this guide need the following boilerplate
 code:
 
-.. code::
+.. code-block::
 
    curl -o /tmp/cropped.tif https://s3.amazonaws.com/geopyspark-test/example-files/cropped.tif
 
-.. code:: python3
+.. code-block:: python
 
    import datetime
    import geopyspark as gps
@@ -127,8 +127,7 @@ backend and the API of GeoPySpark.
 Saving Data to a Backend
 ------------------------
 
-The :meth:`~geopyspark.geotrellis.catalog.write` function will save a
-given :class:`~geopyspark.geotrellis.layer.TiledRasterLayer` to a specified
+The ``write`` function will save a given ``TiledRasterLayer`` to a specified
 backend. If the catalog does not exist when calling this function, then it
 will be created along with the saved layer.
 
@@ -147,7 +146,7 @@ Saving a Spatial Layer
 Saving a spatial layer is a straight forward task. All that needs to be
 supplied is a ``URI``, the name of the layer, and the layer to be saved.
 
-.. code:: python3
+.. code-block:: python
 
     # This will create a catalog called, "spatial-catalog" in the /tmp directory.
     # Within it, a layer named, "spatial-layer" will be saved.
@@ -161,7 +160,7 @@ records within the catalog will be spaced; which in turn, determines the
 resolution of index. The ``TimeUnit`` enum class contains all available
 units of time that can be used to space apart data in the catalog.
 
-.. code:: python3
+.. code-block:: python
 
     # This will create a catalog called, "spacetime-catalog" in the /tmp directory.
     # Within it, a layer named, "spacetime-layer" will be saved and each indice will be spaced apart by SECONDS
@@ -173,9 +172,9 @@ units of time that can be used to space apart data in the catalog.
 Saving a Pyramid
 ~~~~~~~~~~~~~~~~
 
-For those that are unfamiliar with the :class:`~gepyspark.geotrellis.layer.Pyramid`
-class, please see the :ref:`pyramid` section of the visualization guide.
-Otherwise, please continue on.
+For those that are unfamiliar with the ``Pyramid`` class, please see the
+`Pyramid <visualization.rst#Pyramid`__ section of the visualization guide. Otherwise, please continue
+on.
 
 As of right now, there is no way to directly save a ``Pyramid``.
 However, because a ``Pyramid`` is just a collection of
@@ -196,10 +195,9 @@ through the layers of the ``Pyramid`` and save one individually.
 Reading Metadata From a Saved Layer
 -----------------------------------
 
-It is possible to retrieve the :class:`~geopyspark.geotrellis.Metadata` for a layer
-without reading in the whole layer. This is done using the
-:meth:`~geopyspark.geotrellis.catalog.read_layer_metadata` function.
-There is no difference between spatial and spatial-temporal layers when using this function.
+It is possible to retrieve the ``Metadata`` for a layer without reading in the
+whole layer. This is done using the ``read_layer_metadata`` function.  There is
+no difference between spatial and spatial-temporal layers when using this function.
 
 .. code:: python3
 
@@ -211,9 +209,8 @@ There is no difference between spatial and spatial-temporal layers when using th
 Reading a Tile From a Saved Layer
 ---------------------------------
 
-One can read a single tile that has been saved to a layer using the
-:meth:`~geopyspark.geotrellis.catalog.read_value` function. This will either
-return a :class:`~geopyspark.geotrellis.Tile` or ``None`` depending on whether
+One can read a single tile that has been saved to a layer using the ``read_value``
+function. This will either return a ``Tile`` or ``None`` depending on whether
 or not the specified tile exists.
 
 Reading a Tile From a Saved, Spatial Layer
@@ -251,9 +248,8 @@ Reading a Layer
 There are two ways one can read a layer in GeoPySpark: reading the
 entire layer or just portions of it. The former will be the goal
 discussed in this section. While all of the layer will be read, the
-function for doing so is called, :meth:`~geopyspark.geotrellis.catalog.query`.
-There is no difference between spatial and spatial-temporal layers when using
-this function.
+function for doing so is called, ``query``.  There is no difference between
+spatial and spatial-temporal layers when using this function.
 
 **Note**: What distinguishes between a full and partial read is the
 parameters given to ``query``. If no filters were given, then the whole
@@ -284,7 +280,7 @@ One can query an area of a spatial layer that covers the region of
 interest by providing a geometry that represents this region. This area
 can be represented as: ``shapely.geometry`` (specifically ``Polygon``\ s
 and ``MultiPolygon``\ s), the ``wkb`` representation of the geometry, or
-an :class:`~geopyspark.geotrellis.Extent`.
+an ``Extent``.
 
 **Note**: It is important that the given geometry is in the same
 projection as the queried layer. Otherwise, either the wrong area
@@ -405,10 +401,10 @@ then an empty ``TiledRasterLayer`` will be returned.
 AttributeStore
 --------------
 
-When writing a layer, GeoPySpark uses an :class:`~geopyspark.geotrellis.catalog.AttributeStore` to
-write layer metadata required to read and query the layer later. This class can be used outside of
-catalog's ``write`` and ``query`` functions to inspect available layers and store additional, user
-defined, attributes.
+When writing a layer, GeoPySpark uses an ``AttributeStore`` to write layer
+metadata required to read and query the layer later. This class can be used
+outside of catalog's ``write`` and ``query`` functions to inspect available
+layers and store additional, user defined, attributes.
 
 Creating AttributeStore
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -472,8 +468,8 @@ overwrite this attribute.
 
 
 Otherwise you are free to store any additional attribute that is associated
-with the layer. :class:`~geopyspark.geotrellis.catalog.AttributeStore.Attributes`
-provides ``write`` and ``read`` functions that accept and provide a dictionary.
+with the layer. ``AttributeStore.Attributes`` provides ``write`` and ``read``
+functions that accept and provide a dictionary.
 
 .. code:: python3
 

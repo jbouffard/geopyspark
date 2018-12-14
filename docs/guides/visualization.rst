@@ -37,7 +37,7 @@ code:
 Pyramid
 -------
 
-The :class:`~geopyspark.Pyramid` class represents a list of ``TiledRasterLayer``\ s
+The ``Pyramid`` class represents a list of ``TiledRasterLayer``\ s
 that represent the same area where each layer is a level within the pyramid
 at a specific zoom level. Thus, as one moves up the pyramid (starting a
 level 0), the image will have its pixel resolution increased by a power of 2
@@ -88,7 +88,7 @@ Computing the Histogram of a Pyramid
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 One can produce a ``Histogram`` instance representing the bottom most layer
-within a ``Pyramid`` via the :meth:`~geopyspark.Pyramid.get_histogram` method.
+within a ``Pyramid`` via the ``get_histogram`` method.
 
 .. code:: python3
 
@@ -136,7 +136,7 @@ resulting ``Pyramid`` will only have as many levels as the source
 ColorMap
 --------
 
-The :class:`~geopyspark.ColorMap` class in GeoPySpark acts as a wrapper for the
+The ``ColorMap`` class in GeoPySpark acts as a wrapper for the
 GeoTrellis ``ColorMap`` class. It is used to colorize the data within a
 layer when it's being visualized.
 
@@ -235,7 +235,7 @@ More General Build Method
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 As mentioned above, ``ColorMap`` has a more general ``classmethod``
-called :meth:`~geopyspark.ColorMap.build` which takes a wide range of types to
+called ``build`` which takes a wide range of types to
 construct a ``ColorMap``. In the following example, ``build`` will be passed the
 same inputs used in the previous examples.
 

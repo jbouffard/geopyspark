@@ -21,7 +21,7 @@ Rasters
 
 GeoPySpark differs in how it represents rasters from other geo-spatial
 Python libraries like rasterIO. In GeoPySpark, they are represented by
-the :class:`~geopyspark.geotrellis.Tile` class. This class contains a numpy array (refered to as
+the ``Tile`` class. This class contains a numpy array (refered to as
 ``cells``) that represents the cells of the raster in addition to other
 information regarding the data. Along with ``cells``, ``Tile`` can also
 have the ``no_data_value`` of the raster.
@@ -47,7 +47,7 @@ Extent
 Describes the area on Earth a raster represents. This area is
 represented by coordinates that are in some Coordinate Reference System.
 Thus, depending on the system in use, the values that outline the
-:class:`~geopyspark.geotrellis.Extent` can vary. ``Extent`` can also be refered to as a *bounding
+``Extent`` can vary. ``Extent`` can also be refered to as a *bounding
 box*.
 
 .. code:: python3
@@ -58,7 +58,7 @@ box*.
 ProjectedExtent
 ---------------
 
-:class:`~geopyspark.geotrellis.ProjectedExtent` describes both the area on Earth a raster represents
+``ProjectedExtent`` describes both the area on Earth a raster represents
 in addition to its CRS. Either the EPSG code or a proj4 string can be
 used to indicate the CRS of the ``ProjectedExtent``.
 
@@ -76,7 +76,7 @@ used to indicate the CRS of the ``ProjectedExtent``.
 TemporalProjectedExtent
 -----------------------
 
-Similar to ``ProjectedExtent``, :class:`~geopyspark.geotrellis.TemporalProjectedExtent` describes
+Similar to ``ProjectedExtent``, ``TemporalProjectedExtent`` describes
 the area on Earth the raster represents, its CRS, and the time the data
 was represents. This point of time, called ``instant``, is an instance
 of ``datetime.datetime``.
@@ -89,11 +89,10 @@ of ``datetime.datetime``.
 TileLayout
 ----------
 
-:class:`~geopyspark.geotrellis.TileLayout` represents the grid which shows
-how rasters are orginized and assorted in a layer. ``layoutCols`` and ``layoutRows``
-detail how many columns and rows the grid itself has, respectively.
-While ``tileCols`` and ``tileRows`` tell how many columns and rows each
-individual raster has.
+``TileLayout`` represents the grid which shows how rasters are orginized and
+assorted in a layer. ``layoutCols`` and ``layoutRows`` detail how many
+columns and rows the grid itself has, respectively.  While ``tileCols``
+and ``tileRows`` tell how many columns and rows each individual raster has.
 
 .. code:: python3
 
@@ -105,7 +104,7 @@ individual raster has.
 LayoutDefinition
 ----------------
 
-:class:`~geopyspark.geotrellis.LayoutDefinition` represents both how the rasters
+``LayoutDefinition`` represents both how the rasters
 are orginized in a layer as well as the area covered by the grid.
 
 .. code:: python3
@@ -126,7 +125,7 @@ produce a layout based on the data they are given.
 LocalLayout
 ~~~~~~~~~~~
 
-:class:`~geopyspark.geotrellis.LocalLayout` is the first tiling strategy and
+``LocalLayout`` is the first tiling strategy and
 it produces a layout where the grid is constructed over all of the pixels
 within a layer of a given tile size. The resulting layout will match the
 original resolution of the cells within the rasters.
@@ -149,7 +148,7 @@ performed.**
 GlobalLayout
 ~~~~~~~~~~~~
 
-The other tiling strategy is :class:`~geopyspark.geotrellis.GlobalLayout` which makes
+The other tiling strategy is ``GlobalLayout`` which makes
 a layout where the grid is constructed over the global extent CRS. The
 cell resolution of the resulting layer be multiplied by a power of 2 for
 the CRS. Thus, using this strategy will result in either up or down sampling of the
@@ -175,7 +174,7 @@ level, then the ``zoom`` parameter must be set.
 SpatialKey
 ----------
 
-:class:`~geopyspark.geotrellis.SpatialKey`\ s describe the positions of rasters within
+``SpatialKey``\ s describe the positions of rasters within
 the grid of the layout. This grid is a 2D plane where the location of a raster is
 represented by a pair of coordinates, ``col`` and ``row``, respectively.
 As its name and attributes suggest, ``SpatialKey`` deals solely with
@@ -188,7 +187,7 @@ spatial data.
 SpaceTimeKey
 ------------
 
-Like ``SpatialKey``\ s, :class:`~geopyspark.geotrellis.SpaceTimeKey`\ s are
+Like ``SpatialKey``\ s, ``SpaceTimeKey``\ s are
 the position of a raster in a layout. However, the grid is a 3D plane where
 a location of a raster is represented by a pair of coordinates, ``col`` and ``row``,
 as well as a z value that represents a point in time called,
@@ -203,7 +202,7 @@ deal with spatial-temporal data.
 Bounds
 ------
 
-:class:`~geopyspark.geotrellis.Bounds` is the extent of the layout grid in terms of
+``Bounds`` is the extent of the layout grid in terms of
 keys. It has both a ``minKey`` and a ``maxKey`` attributes. These can
 either be a ``SpatialKey`` or a ``SpaceTimeKey`` depending on the type
 of data within the layer. The ``minKey`` is the left, uppermost cell in
@@ -229,15 +228,15 @@ the grid and the ``maxKey`` is the right, bottommost cell.
 Metadata
 --------
 
-:class:`~geopyspark.geotrellis.Metadata` contains information of the values within a layer. This
+``Metadata`` contains information of the values within a layer. This
 data pertains to the layout, projection, and extent of the data
 contained within the layer.
 
 The below example shows how to construct ``Metadata`` by hand, however,
 this is almost never required and ``Metadata`` can be produced using
 easier means. For ``RasterLayer``, one can call the method,
-:meth:`~geopyspark.geotrellis.Metadata.collect_metadata` and
-``TiledRasterLayer`` has the attribute, ``layer_metadata``.
+``collect_metadata`` and ``TiledRasterLayer`` has the attribute,
+``layer_metadata``.
 
 .. code:: python3
 

@@ -222,15 +222,15 @@ Polygonal Mean
 Cost Distance
 --------------
 
-The :meth:`~geopyspark.geotrellis.cost_distance.cost_distance` function is
-an iterative operation for approximating the weighted distance from a raster
-cell to a given geometry. This function takes in a geometry and a “friction layer”
-which essentially describes how difficult it is to traverse each raster cell.
-Cells that fall within the geometry have a final cost of zero, while friction
-cells that contain noData values will correspond to noData values in the final
-result. All other cells have a value that describes the minimum cost of traversing
-from that cell to the geometry. If the friction layer is uniform, this function
-approximates the Euclidean distance, for some modulo scalar value.
+The ``cost_distance`` function is an iterative operation for approximating
+the weighted distance from a raster cell to a given geometry. This function
+takes in a geometry and a “friction layer” which essentially describes how
+difficult it is to traverse each raster cell.  Cells that fall within the
+geometry have a final cost of zero, while friction cells that contain noData
+values will correspond to noData values in the final result. All other cells
+have a value that describes the minimum cost of traversing from that cell to
+the geometry. If the friction layer is uniform, this function approximates the
+Euclidean distance, for some modulo scalar value.
 
 .. code:: python3
 
@@ -256,11 +256,10 @@ Rasterization
 -------------
 
 It may be desirable to convert vector data into a raster layer. For
-this, we provide two different rasterization functions: :meth:`~geopyspark.geotrellis.rasterize.rasterize`
-and :meth:`~geopyspark.geotrellis.rasterize.rasterize_features`. Both
-of these functions will take a series of vectors and assign the pixels
-they cover some value. However, they differ in how they determine
-which value to assign the cell.
+this, we provide two different rasterization functions: ``rasterize``
+and ``rasterize_features``. Both of these functions will take a
+series of vectors and assign the pixels they cover some value. However, they
+differ in how they determine which value to assign the cell.
 
 rasterize
 ^^^^^^^^^
@@ -331,7 +330,7 @@ Before rasterizing our features, we must consider two things: what cell value
 each geometry is going to have and its priority. "priority" here means which
 value to use if more than one geometry intersects a given cell.
 
-The :class:`~geopyspark.vector_pipe.CellValue` class holds both the cells'
+The ``CellValue`` class holds both the cells'
 ``value`` and its priority via the ``zindex``. A ``CellValue`` with a
 higher ``zindex`` will always be chosen over other ``CellValue``\s with lower
 ``zindex``\es.
@@ -349,13 +348,12 @@ higher ``zindex`` will always be chosen over other ``CellValue``\s with lower
 Features
 ~~~~~~~~
 
-A :class:`~geopyspark.vector_pipe.Feature` is an object that represents
-both a geometry and some associated  metadata. In the case
-of ``rasterize_features``, this accompaning data is ``CellValue``.
+A ``Feature`` is an object that represents both a geometry and some associated
+metadata. In the case of ``rasterize_features``, this accompaning data is
+``CellValue``.
 
 Now that we have created our metadata, it is time to pair them with
 the geometries so that we can create our ``Feature``\s.
-
 
 .. code:: python3
 
