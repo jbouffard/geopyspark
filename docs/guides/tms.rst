@@ -6,7 +6,7 @@ interact with these data is to display them on a map. In order to allow for
 this interactive visualization, we provide a means to create Tile Map Service
 (TMS) servers directly from both GeoPySpark RDDs and tile catalogs. A TMS
 server may be viewed using a web-based tool such as geojson.io_ or interacted
-with using the GeoNotebook_ Jupyter kernel. [#]_
+with in a Jupyter Notebook.
 
 Note that the following examples rely on this common boilerplate code:
 
@@ -74,14 +74,20 @@ the TMS server is no longer needed, its resources can be freed by a call to
 
    tms.unbind()
 
-In the event that one is using GeoPySpark from within the GeoNotebook
-environment, ``bind`` should not be used, and the following code should be
-used instead:
+In the event that one is using GeoPySpark from within a Jupyter Notebook,
+we can use another Python library called, folium_ to display the maps
+in a cell.
 
 .. code-block:: python
 
-   from geonotebook.wrappers import TMSRasterData
-   M.add_layer(TMSRasterData(tms), name="NLCD")
+   import folium
+
+   url_pattern = tms.url_pattern
+
+   example_map = folium.Map()
+   folium.TileLayer(tiles=url_pattern, attr='GeoPySpark').add_to(example_map)
+
+   example_map
 
 Custom Rendering Functions
 --------------------------
@@ -255,16 +261,12 @@ Debugging Considerations
 Be aware that if there are problems in the rendering or compositing functions,
 the TMS server will tend to produce empty images, which can result in a silent
 failure of a layer to display, or odd exceptions in programs expecting
-meaningful images, such as GeoNotebook. It is advisable to thoroughly test
-these rendering functions ahead of deployment, as errors encountered in their
+meaningful images. It is advisable to thoroughly test these rendering functions
+ahead of deployment, as errors encountered in their
 use will be largely invisible.
 
 .. _geojson.io: http://geojson.io
-.. _GeoNotebook: https://github.com/OpenGeoscience/geonotebook
-.. [#] Note that changes allowing for display of TMS-served tiles in
-       GeoNotebook have not yet been accepted into the master branch of that
-       repository.  In the meantime, find a TMS-enabled fork at
-       http://github.com/geotrellis/geonotebook.
+.. _folium: https://github.com/python-visualization/folium
 .. [#] If one is only applying a colormap to a singleband tile layer, a custom
        rendering function should not be used as it will be noticeably slower
        to display.
