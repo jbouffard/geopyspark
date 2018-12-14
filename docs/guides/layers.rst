@@ -938,9 +938,6 @@ differs depending on the method used. ``get_histogram`` will produce a
 histogram whose values are ``float``\ s. Whereas ``get_class_histogram``
 returns a histogram whose values are ``int``\ s.
 
-For more informaiton on the ``Histogram`` class, please see the
-``Histogram`` [guide].
-
 .. code:: python3
 
     # Returns a Histogram whose underlying values are floats
@@ -1078,7 +1075,7 @@ The following is a list of ``RDD`` with examples that are supported by
 both classes.
 
 Repartition
-^^^^^^^^^^^
+~~~~~~~~~~~
 
 .. code:: python3
 
