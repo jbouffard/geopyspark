@@ -263,19 +263,24 @@ Rasterization
 ^^^^^^^^^^^^^^
 
 It may be desirable to convert vector data into a raster layer. For
-this, we provide the ``rasterize`` function, which determines the set of
-pixel values covered by each vector element, and assigns a supplied value
-to that set of pixels in a target raster.  If, for example, one had a set of
-polygons representing counties in the US, and a value for, say, the median income
-within each county, a raster could be made representing these data.
+this, we provide two different rasterization functions: :meth:`~geopyspark.geotrellis.rasterize.rasterize`
+and :meth:`~geopyspark.geotrellis.rasterize.rasterize_features`. Both
+of these functions will take a series of vectors and assign the pixels
+they cover some value. However, they differ in how they determine
+which value to assign the cell.
 
-GeoPySpark's ``rasterize`` function can take a ``[shapely.geometry]``,
-``(shapely.geometry)``, or a ``PythonRDD[shapely.geometry]``. These geometries will be
-converted to rasters, then tiled to a given layout, and then be returned as a
-``TiledRasterLayer`` which contains these tiled values.
+rasterize
+~~~~~~~~~
+
+The ``rasterize`` function can take a ``[shapely.geometry]``,
+``(shapely.geometry)``, or a ``PythonRDD[shapely.geometry]``. Given
+these geometries and a ``fill_value``, the vectors will be
+converted to rasters whose cells' values will be the ``fil_value``,
+tiled to a given layout, and then be returned as a ``TiledRasterLayer`` which
+contains these tiled values.
 
 Rasterize MultiPolygons
-~~~~~~~~~~~~~~~~~~~~~~~
+#######################
 
 .. code:: python3
 
@@ -289,7 +294,7 @@ Rasterize MultiPolygons
     gps.rasterize(geoms=[raster_multi_poly], crs=4326, zoom=5, fill_value=1)
 
 Rasterize a PythonRDD of Polygons
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#################################
 
 .. code:: python3
 
@@ -299,7 +304,7 @@ Rasterize a PythonRDD of Polygons
     gps.rasterize(geoms=poly_rdd, crs=3857, zoom=3, fill_value=10)
 
 Rasterize LineStrings
-~~~~~~~~~~~~~~~~~~~~~
+#####################
 
 .. code:: python3
 
@@ -311,9 +316,68 @@ Rasterize LineStrings
     gps.rasterize(geoms=[line_1, line_2, line_3], crs=4326, zoom=3, fill_value=2, cell_type=gps.CellType.INT16)
 
 Rasterize Polygons and LineStrings
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+##################################
 
 .. code:: python3
 
     # Creates a TiledRasterLayer from both LineStrings and MultiPolygons
     gps.rasterize(geoms=[line_1, line_2, line_3, raster_multi_poly], crs=4326, zoom=5, fill_value=2)
+
+rasterize_features
+~~~~~~~~~~~~~~~~~~
+
+``rasterize_features`` is similar to ``rasterize`` except that each given geometry
+will have its own cell value. To accomplish this, we'll need to pass in our
+vectors with additional information. This geometry + metadata is often called
+a, ``Feature``.
+
+CellValue
+#########
+
+Before rasterizing our features, we must consider two things: what cell value
+each geometry is going to have and its priority. "priority" here means which
+value to use if more than one geometry intersects a given cell.
+
+The :class:`~geopyspark.vector_pipe.CellValue` class holds both the cells'
+``value`` and its priority via the ``zindex``. A ``CellValue`` with a
+higher ``zindex`` will always be chosen over other ``CellValue``\s with lower
+``zindex``\es.
+
+.. code:: python3
+
+    # cell_value_3 will be chosen over cell_value_1 and cell_value_2 if all three
+    # intersects the same cell. Likewise, cell_value_2 will be used instead of
+    # cell_value_1 if those occupy the same cell(s)
+
+    cell_value_1 = gps.CellValue(value=1, zindex=1)
+    cell_value_2 = gps.CellValue(value=2, zindex=2)
+    cell_value_3 = gps.CellValue(value=3, zindex=3)
+
+Features
+########
+
+A :class:`~geopyspark.vector_pipe.Feature` is an object that represents
+both a geometry and some associated  metadata. In the case
+of ``rasterize_features``, this accompaning data is ``CellValue``.
+
+Now that we have created our metadata, it is time to pair them with
+the geometries so that we can create our ``Feature``\s.
+
+
+.. code:: python3
+
+    feature_1 = gps.Feature(geometry=line_1, properties=cell_value_1)
+    feature_2 = gps.Feature(geometry=line_2, properties=cell_value_2)
+    feature_3 = gps.Feature(geometry=line_3, properties=cell_value_3)
+
+
+Now that we have our features created, we can now rasterize them.
+As of right now, the ``rasterize_features`` function only takes a
+``PythonRDD[gps.Feature]``.
+
+.. code:: python3
+
+    features_rdd = pysc.parallelize([feature_1, feature_2, feature_3])
+
+    # Creates a TiledRasterLayer with a CRS of LatLng at zoom level 3
+    gps.rasterize_features(features=features_rdd, crs=4326, zoom=3)
