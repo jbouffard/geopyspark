@@ -176,15 +176,8 @@ Aspect
 
     tiled_layer.focal(operation=gps.Operation.ASPECT, neighborhood=square)
 
-Miscellaneous Raster Operations
---------------------------------
-
-There are other means to extract information from rasters and to create
-rasters that need to be presented. These are *polygonal summaries*,
-*cost distance*, and *rasterization*.
-
 Polygonal Summary Methods
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+-------------------------
 
 In addition to local and focal operations, polygonal summaries can also
 be performed on ``TiledRasterLayer``\ s. These are operations that are
@@ -195,7 +188,7 @@ as the layer. If they are not, then either incorrect and/or partial
 results will be returned.
 
 Polygonal Min
-~~~~~~~~~~~~~
+^^^^^^^^^^^^^
 
 .. code:: python3
 
@@ -203,7 +196,7 @@ Polygonal Min
     tiled_layer.polygonal_min(geometry=poly_min, data_type=int)
 
 Polygonal Max
-~~~~~~~~~~~~~
+^^^^^^^^^^^^^^
 
 .. code:: python3
 
@@ -211,7 +204,7 @@ Polygonal Max
     tiled_layer.polygonal_min(geometry=poly_max, data_type=int)
 
 Polygonal Sum
-~~~~~~~~~~~~~
+^^^^^^^^^^^^^
 
 .. code:: python3
 
@@ -219,7 +212,7 @@ Polygonal Sum
     tiled_layer.polygonal_min(geometry=poly_sum, data_type=int)
 
 Polygonal Mean
-~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^
 
 .. code:: python3
 
@@ -227,17 +220,17 @@ Polygonal Mean
     tiled_layer.polygonal_min(geometry=poly_max, data_type=int)
 
 Cost Distance
-^^^^^^^^^^^^^^
+--------------
 
-The ``cost_distance`` function an iterative operation for approximating
-the weighted distance from a raster cell to a given geometry. This function
-takes in a geometry and a “friction layer” which essentially describes how
-difficult it is to traverse each raster cell. Cells that fall within the
-geometry have a final cost of zero, while friction cells that contain noData
-values will correspond to noData values in the final result. All other cells
-have a value that describes the minimum cost of traversing from that cell to
-the geometry. If the friction layer is uniform, this function approximates the
-Euclidean distance, for some modulo scalar value.
+The :meth:`~geopyspark.geotrellis.cost_distance.cost_distance` function is
+an iterative operation for approximating the weighted distance from a raster
+cell to a given geometry. This function takes in a geometry and a “friction layer”
+which essentially describes how difficult it is to traverse each raster cell.
+Cells that fall within the geometry have a final cost of zero, while friction
+cells that contain noData values will correspond to noData values in the final
+result. All other cells have a value that describes the minimum cost of traversing
+from that cell to the geometry. If the friction layer is uniform, this function
+approximates the Euclidean distance, for some modulo scalar value.
 
 .. code:: python3
 
@@ -260,7 +253,7 @@ Euclidean distance, for some modulo scalar value.
 .. _rasterization:
 
 Rasterization
-^^^^^^^^^^^^^^
+-------------
 
 It may be desirable to convert vector data into a raster layer. For
 this, we provide two different rasterization functions: :meth:`~geopyspark.geotrellis.rasterize.rasterize`
@@ -270,7 +263,7 @@ they cover some value. However, they differ in how they determine
 which value to assign the cell.
 
 rasterize
-~~~~~~~~~
+^^^^^^^^^
 
 The ``rasterize`` function can take a ``[shapely.geometry]``,
 ``(shapely.geometry)``, or a ``PythonRDD[shapely.geometry]``. Given
@@ -280,7 +273,7 @@ tiled to a given layout, and then be returned as a ``TiledRasterLayer`` which
 contains these tiled values.
 
 Rasterize MultiPolygons
-#######################
+~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code:: python3
 
@@ -294,7 +287,7 @@ Rasterize MultiPolygons
     gps.rasterize(geoms=[raster_multi_poly], crs=4326, zoom=5, fill_value=1)
 
 Rasterize a PythonRDD of Polygons
-#################################
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code:: python3
 
@@ -304,7 +297,7 @@ Rasterize a PythonRDD of Polygons
     gps.rasterize(geoms=poly_rdd, crs=3857, zoom=3, fill_value=10)
 
 Rasterize LineStrings
-#####################
+~~~~~~~~~~~~~~~~~~~~~
 
 .. code:: python3
 
@@ -316,7 +309,7 @@ Rasterize LineStrings
     gps.rasterize(geoms=[line_1, line_2, line_3], crs=4326, zoom=3, fill_value=2, cell_type=gps.CellType.INT16)
 
 Rasterize Polygons and LineStrings
-##################################
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code:: python3
 
@@ -324,7 +317,7 @@ Rasterize Polygons and LineStrings
     gps.rasterize(geoms=[line_1, line_2, line_3, raster_multi_poly], crs=4326, zoom=5, fill_value=2)
 
 rasterize_features
-~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^
 
 ``rasterize_features`` is similar to ``rasterize`` except that each given geometry
 will have its own cell value. To accomplish this, we'll need to pass in our
@@ -332,7 +325,7 @@ vectors with additional information. This geometry + metadata is often called
 a, ``Feature``.
 
 CellValue
-#########
+~~~~~~~~~
 
 Before rasterizing our features, we must consider two things: what cell value
 each geometry is going to have and its priority. "priority" here means which
@@ -354,7 +347,7 @@ higher ``zindex`` will always be chosen over other ``CellValue``\s with lower
     cell_value_3 = gps.CellValue(value=3, zindex=3)
 
 Features
-########
+~~~~~~~~
 
 A :class:`~geopyspark.vector_pipe.Feature` is an object that represents
 both a geometry and some associated  metadata. In the case
