@@ -28,12 +28,12 @@ GeoPySpark is then the remedy to this predicament.
 
 **Table of Contents:**
 - User Guides
- - [Core Concepts](guides/core-concepts.md)
- - [Working With Layers](guides/layers.md)
- - [Map Algebra](guides/map-algebra.md)
- - [Partition Strategy](guides/partition-strategy.md)
- - [Visualizing Layers](guides/visualization.md)
- - [Catalogs](guides/catalog.md)
- - [TMS](guides.tms.md)
+  - [Core Concepts](guides/core-concepts.md)
+  - [Working With Layers](guides/layers.md)
+  - [Map Algebra](guides/map-algebra.md)
+  - [Partition Strategies](guides/partition-strategy.md)
+  - [Visualizing Layers](guides/visualization.md)
+  - [Catalogs](guides/catalog.md)
+  - [TMS Services](guides/tms.md)
 - Tutorials
- - [Reading and Rasterizing OSM Data](tutorials/reading-and-rasterizing-osm-data)
+  - [Reading and Rasterizing OSM Data](tutorials/reading-and-rasterizing-osm-data.md)
