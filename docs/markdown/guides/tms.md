@@ -57,7 +57,7 @@ server should be accessible from the outside world, a `host` value of
 
 A call to `bind` is then followed by a call to `url_pattern`, which provides a string
 that gives the template for the tiles furnished by the TMS server. This
-template string may be copied directly into geojson.io_, for example. When
+template string may be copied directly into geojson.io, for example. When
 the TMS server is no longer needed, its resources can be freed by a call to
 `unbind`.
 
@@ -92,7 +92,13 @@ in a cell.
 ## Custom Rendering Functions
 
 For the cases when more than a simple color map needs to be applied, one may
-also specify a custom rendering function.<sup>[1](#cmfootnote")</sup> There are two methods for
+also specify a custom rendering function.
+
+**Note:** If one is only applying a colormap to a singleband
+tile layer, a custom rendering function should not be used as it will be
+noticeably slower to display.
+
+There are two methods for
 custom rendering depending on whether one is rendering a single layer or
 compositing multiple layers. We address each in turn.
 
@@ -260,7 +266,3 @@ failure of a layer to display, or odd exceptions in programs expecting
 meaningful images. It is advisable to thoroughly test these rendering functions
 ahead of deployment, as errors encountered in their
 use will be largely invisible.
-
-<a name="cmfootnote">1</a>: If one is only applying a colormap to a singleband
-tile layer, a custom rendering function should not be used as it will be
-noticeably slower to display.
