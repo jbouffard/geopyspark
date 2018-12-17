@@ -37,3 +37,5 @@ GeoPySpark is then the remedy to this predicament.
   - [TMS Servers](guides/tms.md)
 - Tutorials
   - [Reading and Rasterizing OSM Data](tutorials/reading-and-rasterizing-osm-data.md)
+  - [Calculating XTerrain for the Continental United
+    States](tutorials/xterrain-example.md)
