@@ -4,21 +4,21 @@ Before begining, all examples in this guide need the following boilerplate
 code:
 
 ```
-   curl -o /tmp/cropped.tif https://s3.amazonaws.com/geopyspark-test/example-files/cropped.tif
+curl -o /tmp/cropped.tif https://s3.amazonaws.com/geopyspark-test/example-files/cropped.tif
 ```
 
 ```python3
 
-   import datetime
-   import numpy as np
-   import pyproj
-   import geopyspark as gps
+import datetime
+import numpy as np
+import pyproj
+import geopyspark as gps
 
-   from pyspark import SparkContext
-   from shapely.geometry import box, Point
+from pyspark import SparkContext
+from shapely.geometry import box, Point
 
-   conf = gps.geopyspark_conf(master="local[*]", appName="layers")
-   pysc = SparkContext(conf=conf)
+conf = gps.geopyspark_conf(master="local[*]", appName="layers")
+pysc = SparkContext(conf=conf)
 ```
 
 ## How is Data Stored and Represented in GeoPySpark?
@@ -99,14 +99,14 @@ data spatial. If we were dealing with spatial-temproal data, then
 
 ```python3
 
-    arr = np.ones((1, 16, 16), dtype='int')
-    tile = gps.Tile.from_numpy_array(numpy_array=np.array(arr), no_data_value=-500)
+arr = np.ones((1, 16, 16), dtype='int')
+tile = gps.Tile.from_numpy_array(numpy_array=np.array(arr), no_data_value=-500)
 
-    extent = gps.Extent(0.0, 1.0, 2.0, 3.0)
-    projected_extent = gps.ProjectedExtent(extent=extent, epsg=3857)
+extent = gps.Extent(0.0, 1.0, 2.0, 3.0)
+projected_extent = gps.ProjectedExtent(extent=extent, epsg=3857)
 
-    rdd = pysc.parallelize([(projected_extent, tile), (projected_extent, tile)])
-    multiband_raster_layer = gps.RasterLayer.from_numpy_rdd(layer_type=gps.LayerType.SPATIAL, numpy_rdd=rdd)
+rdd = pysc.parallelize([(projected_extent, tile), (projected_extent, tile)])
+multiband_raster_layer = gps.RasterLayer.from_numpy_rdd(layer_type=gps.LayerType.SPATIAL, numpy_rdd=rdd)
 ```
 
 #### From GeoTiffs
@@ -118,7 +118,7 @@ spatial data is read locally.
 
 ```python3
 
-    raster_layer = gps.geotiff.get(layer_type=gps.LayerType.SPATIAL, uri="file:///tmp/cropped.tif")
+raster_layer = gps.geotiff.get(layer_type=gps.LayerType.SPATIAL, uri="file:///tmp/cropped.tif")
 ```
 
 ### Using RasterLayer
@@ -137,7 +137,7 @@ value to `Tile`.
 
 ```python3
 
-    python_rdd = raster_layer.to_numpy_rdd()
+python_rdd = raster_layer.to_numpy_rdd()
 ```
 
 #### SpaceTime Layer to Spatial Layer
@@ -149,19 +149,19 @@ converting `TemporalProjectedExtent` to `ProjectedExtent`.
 
 ```python3
 
-    # Creating the space time layer
+# Creating the space time layer
 
-    instant = datetime.datetime.now()
-    temporal_projected_extent = gps.TemporalProjectedExtent(extent=projected_extent.extent,
-                                                            epsg=projected_extent.epsg,
-                                                            instant=instant)
+instant = datetime.datetime.now()
+temporal_projected_extent = gps.TemporalProjectedExtent(extent=projected_extent.extent,
+                                                        epsg=projected_extent.epsg,
+                                                        instant=instant)
 
-    space_time_rdd = pysc.parallelize([temporal_projected_extent, tile])
-    space_time_layer = gps.RasterLayer.from_numpy_rdd(layer_type=gps.LayerType.SPACETIME, numpy_rdd=space_time_rdd)
+space_time_rdd = pysc.parallelize([temporal_projected_extent, tile])
+space_time_layer = gps.RasterLayer.from_numpy_rdd(layer_type=gps.LayerType.SPACETIME, numpy_rdd=space_time_rdd)
 
-    # Converting the SpaceTime layer to a Spatial layer
+# Converting the SpaceTime layer to a Spatial layer
 
-    space_time_layer.to_spatial_layer()
+space_time_layer.to_spatial_layer()
 ```
 
 #### Collecting Metadata
@@ -175,18 +175,18 @@ found within the layer.
 
 ```python3
 
-    # Collecting Metadata with the default LocalLayout()
-    metadata = raster_layer.collect_metadata()
+# Collecting Metadata with the default LocalLayout()
+metadata = raster_layer.collect_metadata()
 
-    # Collecting Metadata with the default GlobalLayout()
-    raster_layer.collect_metadata(layout=gps.GlobalLayout())
+# Collecting Metadata with the default GlobalLayout()
+raster_layer.collect_metadata(layout=gps.GlobalLayout())
 
-    # Collecting Metadata with a LayoutDefinition
-    extent = gps.Extent(0.0, 0.0, 33.0, 33.0)
-    tile_layout = gps.TileLayout(2, 2, 256, 256)
-    layout_definition = gps.LayoutDefinition(extent, tile_layout)
+# Collecting Metadata with a LayoutDefinition
+extent = gps.Extent(0.0, 0.0, 33.0, 33.0)
+tile_layout = gps.TileLayout(2, 2, 256, 256)
+layout_definition = gps.LayoutDefinition(extent, tile_layout)
 
-    raster_layer.collect_metadata(layout=layout_definition)
+raster_layer.collect_metadata(layout=layout_definition)
 ```
 
 #### Reproject
@@ -196,8 +196,8 @@ given `target_crs`. This method does not sample past the tiles' boundaries.
 
 ```python3
 
-    # Reprojecting the layer to WebMercator
-    raster_layer.reproject(target_crs=3857)
+# Reprojecting the layer to WebMercator
+raster_layer.reproject(target_crs=3857)
 ```
 
 #### Tiling Data to a Layout
@@ -226,27 +226,27 @@ the metadata, then an error will be thrown.
 
 ```python3
 
-    raster_layer.tile_to_layout(layout=metadata)
+raster_layer.tile_to_layout(layout=metadata)
 ```
 
 ##### From LayoutDefinition
 
 ```python3
 
-    raster_layer.tile_to_layout(layout=layout_definition)
+raster_layer.tile_to_layout(layout=layout_definition)
 ```
 
 ##### From LocalLayout
 
 ```python3
 
-    raster_layer.tile_to_layout(gps.LocalLayout())
+raster_layer.tile_to_layout(gps.LocalLayout())
 
 ##### From GlobalLayout
 
 ```python3
 
-    tiled_raster_layer = raster_layer.tile_to_layout(gps.GlobalLayout())
+tiled_raster_layer = raster_layer.tile_to_layout(gps.GlobalLayout())
 ```
 
 ##### From A TiledRasterLayer
@@ -259,7 +259,7 @@ layer's, then an error will be thrown.
 
 ```python3
 
-    raster_layer.tile_to_layout(layout=tiled_raster_layer)
+raster_layer.tile_to_layout(layout=tiled_raster_layer)
 ```
 
 ## TiledRasterLayer
@@ -286,31 +286,31 @@ for more information.
 
 ```python3
 
-    data = np.zeros((1, 512, 512), dtype='float32')
-    tile = gps.Tile.from_numpy_array(numpy_array=data, no_data_value=-1.0)
-    instant = datetime.datetime.now()
+data = np.zeros((1, 512, 512), dtype='float32')
+tile = gps.Tile.from_numpy_array(numpy_array=data, no_data_value=-1.0)
+instant = datetime.datetime.now()
 
-    layer = [(gps.SpaceTimeKey(row=0, col=0, instant=instant), tile),
-             (gps.SpaceTimeKey(row=1, col=0, instant=instant), tile),
-             (gps.SpaceTimeKey(row=0, col=1, instant=instant), tile),
-             (gps.SpaceTimeKey(row=1, col=1, instant=instant), tile)]
+layer = [(gps.SpaceTimeKey(row=0, col=0, instant=instant), tile),
+         (gps.SpaceTimeKey(row=1, col=0, instant=instant), tile),
+         (gps.SpaceTimeKey(row=0, col=1, instant=instant), tile),
+         (gps.SpaceTimeKey(row=1, col=1, instant=instant), tile)]
 
-    rdd = pysc.parallelize(layer)
+rdd = pysc.parallelize(layer)
 
-    extent = gps.Extent(0.0, 0.0, 33.0, 33.0)
-    layout = gps.TileLayout(2, 2, 512, 512)
-    bounds = gps.Bounds(gps.SpaceTimeKey(col=0, row=0, instant=instant), gps.SpaceTimeKey(col=1, row=1, instant=instant))
-    layout_definition = gps.LayoutDefinition(extent, layout)
+extent = gps.Extent(0.0, 0.0, 33.0, 33.0)
+layout = gps.TileLayout(2, 2, 512, 512)
+bounds = gps.Bounds(gps.SpaceTimeKey(col=0, row=0, instant=instant), gps.SpaceTimeKey(col=1, row=1, instant=instant))
+layout_definition = gps.LayoutDefinition(extent, layout)
 
-    metadata = gps.Metadata(
-        bounds=bounds,
-        crs='+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +a=6378137 +b=6378137 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs ',
-        cell_type='float32ud-1.0',
-        extent=extent,
-        layout_definition=layout_definition)
+metadata = gps.Metadata(
+    bounds=bounds,
+    crs='+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +a=6378137 +b=6378137 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs ',
+    cell_type='float32ud-1.0',
+    extent=extent,
+    layout_definition=layout_definition)
 
-    space_time_tiled_layer = gps.TiledRasterLayer.from_numpy_rdd(layer_type=gps.LayerType.SPACETIME,
-                                                                 numpy_rdd=rdd, metadata=metadata)
+space_time_tiled_layer = gps.TiledRasterLayer.from_numpy_rdd(layer_type=gps.LayerType.SPACETIME,
+                                                             numpy_rdd=rdd, metadata=metadata)
 ```
 
 ### Using TiledRasterLayers
@@ -331,7 +331,7 @@ to either `SpatialKey` or `SpaceTimeKey`, and the second value to `Tile`.
 
 ```python3
 
-    python_rdd = tiled_raster_layer.to_numpy_rdd()
+python_rdd = tiled_raster_layer.to_numpy_rdd()
 ```
 
 
@@ -344,9 +344,9 @@ to `SpatialKey`.
 
 ```python3
 
-    # Converting the SpaceTime layer to a Spatial layer
+# Converting the SpaceTime layer to a Spatial layer
 
-    space_time_tiled_layer.to_spatial_layer()
+space_time_tiled_layer.to_spatial_layer()
 ```
 
 
@@ -357,10 +357,10 @@ is possible to retrieve it as a `Tile` using the `lookup` method.
 
 ```python3
 
-    min_key = tiled_raster_layer.layer_metadata.bounds.minKey
+min_key = tiled_raster_layer.layer_metadata.bounds.minKey
 
-    # Retrieve the Tile that is located at the smallest column and row of the layer
-    tiled_raster_layer.lookup(col=min_key.col, row=min_key.row)
+# Retrieve the Tile that is located at the smallest column and row of the layer
+tiled_raster_layer.lookup(col=min_key.col, row=min_key.row)
 ```
 
 #### Masking
@@ -370,23 +370,23 @@ or more Shapely geometries.
 
 ```python3
 
-    layer_extent = tiled_raster_layer.layer_metadata.extent
+layer_extent = tiled_raster_layer.layer_metadata.extent
 
-    # Polygon to mask a region of the layer
-    mask = box(layer_extent.xmin,
-               layer_extent.ymin,
-               layer_extent.xmin + 20,
-               layer_extent.ymin + 20)
+# Polygon to mask a region of the layer
+mask = box(layer_extent.xmin,
+           layer_extent.ymin,
+           layer_extent.xmin + 20,
+           layer_extent.ymin + 20)
 
-    tiled_raster_layer.mask(geometries=mask)
+tiled_raster_layer.mask(geometries=mask)
 
-    # Multiple Polygons can be given to mask the layer
-    mask_2 = box(layer_extent.xmin + 50,
-                 layer_extent.ymin + 50,
-                 layer_extent.xmax - 20,
-                 layer_extent.ymax - 20)
+# Multiple Polygons can be given to mask the layer
+mask_2 = box(layer_extent.xmin + 50,
+             layer_extent.ymin + 50,
+             layer_extent.xmax - 20,
+             layer_extent.ymax - 20)
 
-    tiled_raster_layer.mask(geometries=[mask, mask_2])
+tiled_raster_layer.mask(geometries=[mask, mask_2])
 ```
 
 #### Normalize
@@ -396,8 +396,8 @@ values fall within a given range.
 
 ```python3
 
-    # Normalizes the layer so that the new min value is 0 and the new max value is 60000
-    tiled_raster_layer.normalize(new_min=0, new_max=60000)
+# Normalizes the layer so that the new min value is 0 and the new max value is 60000
+tiled_raster_layer.normalize(new_min=0, new_max=60000)
 ```
 
 #### Pyramiding
@@ -418,8 +418,8 @@ of the visualization guide.
 
 ```python3
 
-    # This creates a Pyramid with zoom levels that go from 0 to 11 for a total of 12.
-    tiled_raster_layer.pyramid()
+# This creates a Pyramid with zoom levels that go from 0 to 11 for a total of 12.
+tiled_raster_layer.pyramid()
 ```
 
 #### Reproject
@@ -434,8 +434,8 @@ changed to 0 since the area being represented changes to just the tiles.
 
 ```python3
 
-    # Reproject the layer to WebMercator
-    reprojected_tiled_raster_layer = tiled_raster_layer.reproject(target_crs=3857)
+# Reproject the layer to WebMercator
+reprojected_tiled_raster_layer = tiled_raster_layer.reproject(target_crs=3857)
 ```
 
 #### Stitching
@@ -447,8 +447,8 @@ cause a crash due to the size of the resulting `Tile`.
 
 ```python3
 
-    # Creates a Tile with an underlying numpy array with a size of (1, 6144, 1536).
-    tiled_raster_layer.stitch()
+# Creates a Tile with an underlying numpy array with a size of (1, 6144, 1536).
+tiled_raster_layer.stitch()
 ```
 
 #### Saving a Stitched Layer
@@ -457,8 +457,8 @@ The `save_stitched` method both stitches and saves a layer as a GeoTiff.
 
 ```python3
 
-    # Saves the stitched layer to /tmp/stitched.tif
-    tiled_raster_layer.save_stitched(path='/tmp/stitched.tif')
+# Saves the stitched layer to /tmp/stitched.tif
+tiled_raster_layer.save_stitched(path='/tmp/stitched.tif')
 ```
 
 It is also possible to specify the regions of layer to be saved when it
@@ -466,15 +466,15 @@ is stitched.
 
 ```python3
 
-    layer_extent = tiled_raster_layer.layer_metadata.layout_definition.extent
+layer_extent = tiled_raster_layer.layer_metadata.layout_definition.extent
 
-    # Only a portion of the stitched layer needs to be saved, so we will create a sub Extent to crop to.
-    sub_exent = gps.Extent(xmin=layer_extent.xmin + 10,
-                           ymin=layer_extent.ymin + 10,
-                           xmax=layer_extent.xmax - 10,
-                           ymax=layer_extent.ymax - 10)
+# Only a portion of the stitched layer needs to be saved, so we will create a sub Extent to crop to.
+sub_exent = gps.Extent(xmin=layer_extent.xmin + 10,
+                       ymin=layer_extent.ymin + 10,
+                       xmax=layer_extent.xmax - 10,
+                       ymax=layer_extent.ymax - 10)
 
-    tiled_raster_layer.save_stitched(path='/tmp/cropped-stitched.tif', crop_bounds=sub_exent)
+tiled_raster_layer.save_stitched(path='/tmp/cropped-stitched.tif', crop_bounds=sub_exent)
 ```
 
 In addition to the sub `Extent`, one can also choose how many cols and rows
@@ -482,9 +482,9 @@ will be in the saved in the GeoTiff.
 
 ```python3
 
-    tiled_raster_layer.save_stitched(path='/tmp/cropped-stitched-2.tif',
-                                     crop_bounds=sub_exent,
-                                     crop_dimensions=(1000, 1000))
+tiled_raster_layer.save_stitched(path='/tmp/cropped-stitched-2.tif',
+                                 crop_bounds=sub_exent,
+                                 crop_dimensions=(1000, 1000))
 ```
 
 #### Tiling Data to a Layout
@@ -498,17 +498,17 @@ retiling a `TiledRasterLayer`.
 
 ```python3
 
-    # Original zoom_level of the source TiledRasterLayer
-    tiled_raster_layer.zoom_level
+# Original zoom_level of the source TiledRasterLayer
+tiled_raster_layer.zoom_level
 
-    # zoom_level will be lost in the resulting TiledRasterlayer
-    tiled_raster_layer.tile_to_layout(layout=gps.LocalLayout())
+# zoom_level will be lost in the resulting TiledRasterlayer
+tiled_raster_layer.tile_to_layout(layout=gps.LocalLayout())
 
-    # zoom_level will be changed in the resulting TiledRasterLayer
-    tiled_raster_layer.tile_to_layout(layout=gps.GlobalLayout(), target_crs=3857)
+# zoom_level will be changed in the resulting TiledRasterLayer
+tiled_raster_layer.tile_to_layout(layout=gps.GlobalLayout(), target_crs=3857)
 
-    # zoom_level will reamin the same in the resulting TiledRasterLayer
-    tiled_raster_layer.tile_to_layout(layout=gps.GlobalLayout(zoom=11))
+# zoom_level will reamin the same in the resulting TiledRasterLayer
+tiled_raster_layer.tile_to_layout(layout=gps.GlobalLayout(zoom=11))
 ```
 
 
@@ -537,11 +537,11 @@ Where each given `Point` will be paired with the values it intersects.
 
 ```python3
 
-   # Creating the points
-   extent = tiled_raster_layer.layer_metadata.extent
+# Creating the points
+extent = tiled_raster_layer.layer_metadata.extent
 
-   p1 = Point(extent.xmin, extent.ymin + 0.5)
-   p2 = Point(extent.xmax , extent.ymax - 1.0)
+p1 = Point(extent.xmin, extent.ymin + 0.5)
+p2 = Point(extent.xmax , extent.ymax - 1.0)
 ```
 
 ###### Giving a [shapely.geometry.Point] to get_point_values
@@ -551,7 +551,7 @@ then the ouput will be a `[(shapely.geometry.Point, [float])]`.
 
 ```python3
 
-   tiled_raster_layer.get_point_values(points=[p1, p2])
+tiled_raster_layer.get_point_values(points=[p1, p2])
 ```
 
 ###### Giving a {k: shapely.geometry.Point} to get_point_values
@@ -561,7 +561,7 @@ then the ouput will be a `{k: (shapely.geometry.Point, [float])}`.
 
 ```python3
 
-   tiled_raster_layer.get_point_values(points={'point 1': p1, 'point 2': p2})
+tiled_raster_layer.get_point_values(points={'point 1': p1, 'point 2': p2})
 ```
 
 ##### Getting the Point Values From a SPACETIME Layer
@@ -573,10 +573,10 @@ intersects and those values' corresponding timestamps.
 
 ```python3
 
-   st_extent = space_time_tiled_layer.layer_metadata.extent
+st_extent = space_time_tiled_layer.layer_metadata.extent
 
-   p1 = Point(st_extent.xmin, st_extent.ymin + 0.5)
-   p2 = Point(st_extent.xmax , st_extent.ymax - 1.0)
+p1 = Point(st_extent.xmin, st_extent.ymin + 0.5)
+p2 = Point(st_extent.xmax , st_extent.ymax - 1.0)
 ```
 
 ###### Giving a [shapely.geometry.Point] to get_point_values
@@ -586,7 +586,7 @@ then the ouput will be a `[(shapely.geometry.Point, [(datetime.datetime, [float]
 
 ```python3
 
-   space_time_tiled_layer.get_point_values(points=[p1, p2])
+space_time_tiled_layer.get_point_values(points=[p1, p2])
 ```
 
 ###### Giving a {k: shapely.geometry.Point} to get_point_values
@@ -596,7 +596,7 @@ then the ouput will be a `{k: (shapely.geometry.Point, [(datetime.datetime, [flo
 
 ```python3
 
-   space_time_tiled_layer.get_point_values(points={'point 1': p1, 'point 2': p2})
+space_time_tiled_layer.get_point_values(points={'point 1': p1, 'point 2': p2})
 ```
 
 #### Aggregating the Values of Each Cell
@@ -619,15 +619,14 @@ Not all `Operation`s are supported. The following ones can be used in
 
 ```python3
 
-   unioned_layer = gps.union(layers=[tiled_raster_layer, tiled_raster_layer + 1])
+unioned_layer = gps.union(layers=[tiled_raster_layer, tiled_raster_layer + 1])
 
-   # Sum the values of the unioned_layer
-   unioned_layer.aggregate_by_cell(operation=gps.Operation.SUM)
+# Sum the values of the unioned_layer
+unioned_layer.aggregate_by_cell(operation=gps.Operation.SUM)
 
-   # Get the max value for each cell
-   unioned_layer.aggregate_by_cell(operation=gps.Operation.MAX)
+# Get the max value for each cell
+unioned_layer.aggregate_by_cell(operation=gps.Operation.MAX)
 ```
-
 
 ## General Methods
 
@@ -650,7 +649,7 @@ or `TiledRasterLayer` that contains all of the elements from the given layers.
 
 ```python3
 
-   gps.union(layers=[tiled_raster_layer, tiled_raster_layer])
+gps.union(layers=[tiled_raster_layer, tiled_raster_layer])
 ```
 
 ### Selecting a SubSection of Bands
@@ -666,11 +665,11 @@ reading them in.
 
 ```python3
 
-    # Selecting the second band from the layer
-    multiband_raster_layer.bands(1)
+# Selecting the second band from the layer
+multiband_raster_layer.bands(1)
 
-    # Selecting the first and second bands from the layer
-    multiband_raster_layer.bands([0, 1])
+# Selecting the first and second bands from the layer
+multiband_raster_layer.bands([0, 1])
 ```
 
 
@@ -686,21 +685,21 @@ values' bands will be ordered based on their position of their respective layer.
 
 ```python3
 
-    # Setting up example RDD
+# Setting up example RDD
 
-    twos = np.ones((1, 16, 16), dtype='int') + 1
-    twos_tile = gps.Tile.from_numpy_array(numpy_array=np.array(twos), no_data_value=-500)
+twos = np.ones((1, 16, 16), dtype='int') + 1
+twos_tile = gps.Tile.from_numpy_array(numpy_array=np.array(twos), no_data_value=-500)
 
-    twos_rdd = pysc.parallelize([(projected_extent, twos_tile)])
-    twos_raster_layer = gps.RasterLayer.from_numpy_rdd(layer_type=gps.LayerType.SPATIAL, numpy_rdd=twos_rdd)
+twos_rdd = pysc.parallelize([(projected_extent, twos_tile)])
+twos_raster_layer = gps.RasterLayer.from_numpy_rdd(layer_type=gps.LayerType.SPATIAL, numpy_rdd=twos_rdd)
 
-    # The resulting values of the layer will have 2 bands: the first will be all ones,
-    # and the last band will be all twos
-    gps.combine_bands(layers=[multiband_raster_layer, twos_raster_layer])
+# The resulting values of the layer will have 2 bands: the first will be all ones,
+# and the last band will be all twos
+gps.combine_bands(layers=[multiband_raster_layer, twos_raster_layer])
 
-    # The resulting values of the layer will have 2 bands: the first will be all twos and the
-    # other band will be all ones
-    gps.combine_bands(layers=[twos_raster_layer, multiband_raster_layer])
+# The resulting values of the layer will have 2 bands: the first will be all twos and the
+# other band will be all ones
+gps.combine_bands(layers=[twos_raster_layer, multiband_raster_layer])
 ```
 
 ### Collecting the Keys of a Layer
@@ -709,14 +708,14 @@ To collect all of the keys of a layer, use the `collect_keys` method.
 
 ```python3
 
-  # Returns a list of ProjectedExtents
-  multiband_raster_layer.collect_keys()
+# Returns a list of ProjectedExtents
+multiband_raster_layer.collect_keys()
 
-  # Returns a list of a SpatialKeys
-  tiled_raster_layer.collect_keys()
+# Returns a list of a SpatialKeys
+tiled_raster_layer.collect_keys()
 
-  # Returns a list of SpaceTimeKeys
-  space_time_tiled_layer.collect_keys()
+# Returns a list of SpaceTimeKeys
+space_time_tiled_layer.collect_keys()
 ```
 
 ### Filtering a Layer By Times
@@ -732,7 +731,7 @@ kept.
 
 ```python3
 
-   space_time_layer.filter_by_times(time_intervals=[instant])
+space_time_layer.filter_by_times(time_intervals=[instant])
 ```
 
 #### Filtering By Intervals
@@ -742,16 +741,16 @@ Various time intervals can also be given as well, and any keys whose
 
 ```python3
 
-   end_date_1 = instant + datetime.timedelta(days=3)
-   end_date_2 = instant + datetime.timedelta(days=5)
+end_date_1 = instant + datetime.timedelta(days=3)
+end_date_2 = instant + datetime.timedelta(days=5)
 
-   # Will filter out any value whose key does not fall in the range of
-   # instant and end_date_1
-   space_time_layer.filter_by_times(time_intervals=[instant, end_date_1])
+# Will filter out any value whose key does not fall in the range of
+# instant and end_date_1
+space_time_layer.filter_by_times(time_intervals=[instant, end_date_1])
 
-   # Will filter out any value whose key does not fall in the range of
-   # instant and end_date_1 OR whose key does not match end_date_2
-   space_time_layer.filter_by_times(time_intervals=[instant, end_date_1, end_date_2])
+# Will filter out any value whose key does not fall in the range of
+# instant and end_date_1 OR whose key does not match end_date_2
+space_time_layer.filter_by_times(time_intervals=[instant, end_date_1, end_date_2])
 ```
 
 ### Converting the Data Type of the Rasters' Cells
@@ -763,14 +762,14 @@ will be no `noData` value for the resulting rasters.
 
 ```python3
 
-    # The data type of the cells before converting
-    metadata.cell_type
+# The data type of the cells before converting
+metadata.cell_type
 
-    # Changing the cell type to int8 with a noData value of -100.
-    raster_layer.convert_data_type(new_type=gps.CellType.INT8, no_data_value=-100)
+# Changing the cell type to int8 with a noData value of -100.
+raster_layer.convert_data_type(new_type=gps.CellType.INT8, no_data_value=-100)
 
-    # Changing the cell type to int32 with no noData value.
-    raster_layer.convert_data_type(new_type=gps.CellType.INT32)
+# Changing the cell type to int32 with no noData value.
+raster_layer.convert_data_type(new_type=gps.CellType.INT32)
 ```
 
 ### Reclassify Cell Values
@@ -782,10 +781,10 @@ the `data_type` of the cells also needs to be given. This is either
 
 ```python3
 
-    # Change all values greater than or equal to 1 to 10
-    reclassified = multiband_raster_layer.reclassify(value_map={1: 10},
-                                                     data_type=int,
-                                                     classification_strategy=gps.ClassificationStrategy.GREATER_THAN_OR_EQUAL_TO)
+# Change all values greater than or equal to 1 to 10
+reclassified = multiband_raster_layer.reclassify(value_map={1: 10},
+                                                 data_type=int,
+                                                 classification_strategy=gps.ClassificationStrategy.GREATER_THAN_OR_EQUAL_TO)
 ```
 
 ### Merging the Values of a Layer Together
@@ -803,29 +802,29 @@ should be changed:
 
 ```python3
 
-    # Creating the layers
-    no_data = np.full((1, 4, 4), -1)
-    zeros = np.zeros((1, 4, 4))
+# Creating the layers
+no_data = np.full((1, 4, 4), -1)
+zeros = np.zeros((1, 4, 4))
 
-    def create_layer(no_data_value=None):
-        data_tile = gps.Tile.from_numpy_array(numpy_array=no_data, no_data_value=no_data_value)
-        zeros_tile = gps.Tile.from_numpy_array(numpy_array=zeros, no_data_value=no_data_value)
+def create_layer(no_data_value=None):
+    data_tile = gps.Tile.from_numpy_array(numpy_array=no_data, no_data_value=no_data_value)
+    zeros_tile = gps.Tile.from_numpy_array(numpy_array=zeros, no_data_value=no_data_value)
 
-        layer_rdd = pysc.parallelize([(projected_extent, data_tile), (projected_extent, zeros_tile)])
-        return gps.RasterLayer.from_numpy_rdd(layer_type=gps.LayerType.SPATIAL, numpy_rdd=layer_rdd)
+    layer_rdd = pysc.parallelize([(projected_extent, data_tile), (projected_extent, zeros_tile)])
+    return gps.RasterLayer.from_numpy_rdd(layer_type=gps.LayerType.SPATIAL, numpy_rdd=layer_rdd)
 
-    # Resulting layer has a no_data_value of -1
-    no_data_layer = create_layer(-1)
+# Resulting layer has a no_data_value of -1
+no_data_layer = create_layer(-1)
 
-    # Resutling layer has no no_data_value
-    no_no_data_layer = create_layer()
+# Resutling layer has no no_data_value
+no_no_data_layer = create_layer()
 
 
-    # The resulting merged value will be all zeros since -1 is the noData value
-    no_data_layer.merge()
+# The resulting merged value will be all zeros since -1 is the noData value
+no_data_layer.merge()
 
-    # The resulting merged value will be all -1's as `no_data_value` was set.
-    no_no_data_layer.merge()
+# The resulting merged value will be all -1's as `no_data_value` was set.
+no_no_data_layer.merge()
 ```
 
 ### Mapping Over the Cells
@@ -837,7 +836,7 @@ Thus, the function given would have the following type signature:
 
 ```python3
 
-    def input_function(numpy_array: np.ndarray, no_data_value=None) -> np.ndarray
+def input_function(numpy_array: np.ndarray, no_data_value=None) -> np.ndarray
 ```
 
 The given function is then applied to each `Tile` in the layer.
@@ -849,19 +848,19 @@ together all functions to avoid unnecessary serialization overhead.
 
 ```python3
 
-    # Mapping with a single funciton
+# Mapping with a single funciton
 
-    def add_one(cells, _):
-        return cells + 1
+def add_one(cells, _):
+    return cells + 1
 
-    raster_layer.map_cells(add_one)
+raster_layer.map_cells(add_one)
 
-    # Chaning together two functions to be mapped
+# Chaning together two functions to be mapped
 
-    def divide_two(cells, _):
-        return (add_one(cells) / 2)
+def divide_two(cells, _):
+    return (add_one(cells) / 2)
 
-    raster_layer.map_cells(divide_two)
+raster_layer.map_cells(divide_two)
 ```
 
 ### Mapping Over Tiles
@@ -873,7 +872,7 @@ signature would be this:
 
 ```python3
 
-    def input_function(tile: Tile) -> Tile
+def input_function(tile: Tile) -> Tile
 ```
 
 **Note**: In order for this method to operate, the internal `RDD`
@@ -883,10 +882,10 @@ together all functions to avoid unnecessary serialization overhead.
 
 ```python3
 
-    def minus_two(tile):
-        return gps.Tile.from_numpy_array(tile.cells - 2, no_data_value=tile.no_data_value)
+def minus_two(tile):
+    return gps.Tile.from_numpy_array(tile.cells - 2, no_data_value=tile.no_data_value)
 
-    raster_layer.map_tiles(minus_two)
+raster_layer.map_tiles(minus_two)
 ```
 
 ### Calculating the Histogram for the Layer
@@ -900,11 +899,11 @@ Whereas `get_class_histogram` returns a histogram whose values are `int`s.
 
 ```python3
 
-    # Returns a Histogram whose underlying values are floats
-    tiled_raster_layer.get_histogram()
+# Returns a Histogram whose underlying values are floats
+tiled_raster_layer.get_histogram()
 
-    # Returns a Histogram whose underlying values are ints
-    tiled_raster_layer.get_class_histogram()
+# Returns a Histogram whose underlying values are ints
+tiled_raster_layer.get_class_histogram()
 ```
 
 ### Finding the Quantile Breaks for the Layer
@@ -914,7 +913,7 @@ If you wish to find the quantile breaks for a layer without a
 
 ```python3
 
-    tiled_raster_layer.get_quantile_breaks(num_breaks=3)
+tiled_raster_layer.get_quantile_breaks(num_breaks=3)
 ```
 
 #### Quantile Breaks for Exact Ints
@@ -926,7 +925,7 @@ errors could occur.
 
 ```python3
 
-    tiled_raster_layer.get_quantile_breaks_exact_int(num_breaks=3)
+tiled_raster_layer.get_quantile_breaks_exact_int(num_breaks=3)
 ```
 
 #### Finding the Min and Max Values of a Layer
@@ -937,9 +936,8 @@ data type of the cells.
 
 ```python3
 
-    tiled_raster_layer.get_min_max()
+tiled_raster_layer.get_min_max()
 ```
-
 
 ### Converting the Values of a Layer to PNGs
 
@@ -953,10 +951,10 @@ In addition to converting each value to a PNG, the resulting collection of
 
 ```python3
 
-   hist = tiled_raster_layer.get_histogram()
-   cmap = gps.ColorMap.build(hist, 'viridis')
+hist = tiled_raster_layer.get_histogram()
+cmap = gps.ColorMap.build(hist, 'viridis')
 
-   tiled_raster_layer.to_png_rdd(color_map=cmap)
+tiled_raster_layer.to_png_rdd(color_map=cmap)
 ```
 
 ### Converting the Values of a Layer to GeoTiffs
@@ -1008,11 +1006,11 @@ different gradiant. By default, `color_map` is `None`. To learn more about
 
 ```python3
 
-   # Creates an RDD[(K, bytes)] with the default parameters
-   tiled_raster_layer.to_geotiff_rdd()
+# Creates an RDD[(K, bytes)] with the default parameters
+tiled_raster_layer.to_geotiff_rdd()
 
-   # Creates an RDD whose GeoTiffs are tiled with a size of (128, 128)
-   tiled_raster_layer.to_geotiff_rdd(storage_method=gps.StorageMethod.TILED, tile_dimensions=(128, 128))
+# Creates an RDD whose GeoTiffs are tiled with a size of (128, 128)
+tiled_raster_layer.to_geotiff_rdd(storage_method=gps.StorageMethod.TILED, tile_dimensions=(128, 128))
 ```
 
 ## RDD Methods
@@ -1028,49 +1026,49 @@ both classes.
 
 ```python3
 
-    # Repartition the internal RDD to have 120 partitions
-    tiled_raster_layer.repartition(num_partitions=120)
+# Repartition the internal RDD to have 120 partitions
+tiled_raster_layer.repartition(num_partitions=120)
 ```
 
 ### Cache
 
 ```python3
 
-    raster_layer.cache()
+raster_layer.cache()
 ```
 
 ### Persist
 
 ```python3
 
-    # If no level is given, then MEMORY_ONLY will be used
-    tiled_raster_layer.persist()
+# If no level is given, then MEMORY_ONLY will be used
+tiled_raster_layer.persist()
 ```
 
 ### Unpersist
 
 ```python3
 
-    tiled_raster_layer.unpersist()
+tiled_raster_layer.unpersist()
 ```
 
 ### getNumberOfPartitions
 
 ```python3
 
-    raster_layer.getNumPartitions()
+raster_layer.getNumPartitions()
 ```
 
 ### Count
 
 ```python3
 
-    raster_layer.count()
+raster_layer.count()
 ```
 
 ### isEmpty
 
 ```python3
 
-   raster_layer.isEmpty()
+raster_layer.isEmpty()
 ```

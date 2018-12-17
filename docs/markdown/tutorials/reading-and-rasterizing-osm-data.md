@@ -13,7 +13,7 @@ The following command will use `curl` to download the file from
 `S3` and move it to the `/tmp` directory.
 
 ```
-  curl -o /tmp/boyertown.orc https://s3.amazonaws.com/geopyspark-test/example-files/boyertown.orc
+curl -o /tmp/boyertown.orc https://s3.amazonaws.com/geopyspark-test/example-files/boyertown.orc
 ```
 
 **A side note**: Files can be retrieved directly from S3. However, this could
@@ -26,13 +26,13 @@ Now that we have our data, we can now read it in and begin to work with.
 
 ```python3
 
-   import geopyspark as gps
-   from pyspark import SparkContext
+import geopyspark as gps
+from pyspark import SparkContext
 
-   conf = gps.geopyspark_conf(appName="osm-rasterize-example", master="local[*]")
-   pysc = SparkContext(conf=conf)
+conf = gps.geopyspark_conf(appName="osm-rasterize-example", master="local[*]")
+pysc = SparkContext(conf=conf)
 
-   features = gps.osm_reader.from_orc("/tmp/boyertown.orc")
+features = gps.osm_reader.from_orc("/tmp/boyertown.orc")
 ```
 
 The above code sets up a `SparkContext` and then reads in the
@@ -65,8 +65,8 @@ geometries (`polygons`).
 
 ```python3
 
-   lines = features.get_line_features_rdd()
-   polygons = features.get_polygon_features_rdd()
+lines = features.get_line_features_rdd()
+polygons = features.get_polygon_features_rdd()
 ```
 
 ### Looking at the Tags of the Features
@@ -80,38 +80,38 @@ all of the unique tags for all of the `Polygon`s in the collection.
 
 ```python3
 
-   features.get_polygon_tags()
+features.get_polygon_tags()
 ```
 
 Which has the following output:
 
 ```
-   {'NHD:ComID': '25964412',
-    'NHD:Elevation': '0.00000000000',
-    'NHD:FCode': '39004',
-    'NHD:FDate': '2001/08/16',
-    'NHD:FTYPE': 'LakePond',
-    'NHD:Permanent_': '25964412',
-    'NHD:ReachCode': '02040203004486',
-    'NHD:Resolution': 'High',
-    'addr:city': 'Gilbertsville',
-    'addr:housenumber': '1100',
-    'addr:postcode': '19525',
-    'addr:state': 'PA',
-    'addr:street': 'E Philadelphia Avenue',
-    'amenity': 'school',
-    'area': 'yes',
-    'building': 'yes',
-    'leisure': 'pitch',
-    'name': 'Boyertown Area Junior High School-West Center',
-    'natural': 'water',
-    'railway': 'platform',
-    'smoking': 'outside',
-    'source': 'Yahoo',
-    'sport': 'baseball',
-    'tourism': 'museum',
-    'wikidata': 'Q8069423',
-    'wikipedia': "en:Zern's Farmer's Market"}
+{'NHD:ComID': '25964412',
+'NHD:Elevation': '0.00000000000',
+'NHD:FCode': '39004',
+'NHD:FDate': '2001/08/16',
+'NHD:FTYPE': 'LakePond',
+'NHD:Permanent_': '25964412',
+'NHD:ReachCode': '02040203004486',
+'NHD:Resolution': 'High',
+'addr:city': 'Gilbertsville',
+'addr:housenumber': '1100',
+'addr:postcode': '19525',
+'addr:state': 'PA',
+'addr:street': 'E Philadelphia Avenue',
+'amenity': 'school',
+'area': 'yes',
+'building': 'yes',
+'leisure': 'pitch',
+'name': 'Boyertown Area Junior High School-West Center',
+'natural': 'water',
+'railway': 'platform',
+'smoking': 'outside',
+'source': 'Yahoo',
+'sport': 'baseball',
+'tourism': 'museum',
+'wikidata': 'Q8069423',
+'wikipedia': "en:Zern's Farmer's Market"}
 ```
 
 So it appears that there are schools in this dataset, and that we can continue
@@ -139,17 +139,17 @@ schools, `Polygon`s that are labeled as schools will have a greater
 
 ```python3
 
-   mapped_lines = lines.map(lambda feature: gps.Feature(feautre.geometry, gps.CellValue(value=1, zindex=1)))
+mapped_lines = lines.map(lambda feature: gps.Feature(feautre.geometry, gps.CellValue(value=1, zindex=1)))
 
-   def assign_polygon_feature(feature):
-       tags = feature.properties.tags.values()
+def assign_polygon_feature(feature):
+   tags = feature.properties.tags.values()
 
-       if 'school' in tags.values():
-           return gps.Feature(feature.geometry, gps.CellValue(value=3, zindex=3))
-       else:
-           return gps.Feature(feature.geometry, gps.CellValue(value=2, zindex=2))
+   if 'school' in tags.values():
+       return gps.Feature(feature.geometry, gps.CellValue(value=3, zindex=3))
+   else:
+       return gps.Feature(feature.geometry, gps.CellValue(value=2, zindex=2))
 
-   mapped_polygons = polygons.map(assign_polygon_feature)
+mapped_polygons = polygons.map(assign_polygon_feature)
 ```
 
 We create the `mapped_lines` variable that contains an `RDD` of `Feature`s,
@@ -166,9 +166,9 @@ rasterize them.
 
 ```python3
 
-   unioned_features = pysc.union((mapped_lines, mapped_polygons))
+unioned_features = pysc.union((mapped_lines, mapped_polygons))
 
-   rasterized_layer = gps.rasterize_features(features=unioned_features, crs=4326, zoom=12)
+rasterized_layer = gps.rasterize_features(features=unioned_features, crs=4326, zoom=12)
 ```
 
 The `rasterize_features` function requires a single `RDD` of `Feature`s.

@@ -11,11 +11,11 @@ Note that the following examples rely on this common boilerplate code:
 
 ```python
 
-   import geopyspark as gps
-   from pyspark import SparkContext
+import geopyspark as gps
+from pyspark import SparkContext
 
-   conf = gps.geopyspark_conf(appName="demo")
-   sc = SparkContext(conf=conf)
+conf = gps.geopyspark_conf(appName="demo")
+sc = SparkContext(conf=conf)
 ```
 
 ## Basic Example
@@ -25,25 +25,25 @@ layer with some custom color map. This is accomplished easily:
 
 ```python
 
-   cm = gps.ColorMap.nlcd_colormap()
+cm = gps.ColorMap.nlcd_colormap()
 
-   layers = []
+layers = []
 
-   # Reads in the first 3 levels of the layer
-   for zoom in range(0, 4):
-      layers.append(gps.query(uri="s3://azavea-datahub/catalog",
-                              layer_name="nlcd-tms-epsg3857",
-                              layer_zoom=zoom))
+# Reads in the first 3 levels of the layer
+for zoom in range(0, 4):
+  layers.append(gps.query(uri="s3://azavea-datahub/catalog",
+                          layer_name="nlcd-tms-epsg3857",
+                          layer_zoom=zoom))
 
-   nlcd_pyramid = gps.Pyramid(layers)
+nlcd_pyramid = gps.Pyramid(layers)
 
-   tms = gps.TMS.build(source=nlcd_pyramid, display=cm)
+tms = gps.TMS.build(source=nlcd_pyramid, display=cm)
 ```
 
 Of course, other color maps can be used.  See the documentation for
 `ColorMap` for more details.
 
-:code:`TMS.build` can display data from catalogs—which are represented as a
+`TMS.build` can display data from catalogs—which are represented as a
 string-string pair containing the URI of the catalog root and the name of the
 layer—or from a `Pyramid` object. One may also specify a list of any
 combination of these sources; more on multiple sources below.
@@ -63,14 +63,14 @@ the TMS server is no longer needed, its resources can be freed by a call to
 
 ```python
 
-   # set up the TMS server to serve from 'localhost' on a random port
-   tms.bind()
+# set up the TMS server to serve from 'localhost' on a random port
+tms.bind()
 
-   tms.url_pattern
+tms.url_pattern
 
-   # (browse the the TMS-served layer in some interface)
+# (browse the the TMS-served layer in some interface)
 
-   tms.unbind()
+tms.unbind()
 ```
 
 In the event that one is using GeoPySpark from within a Jupyter Notebook,
@@ -79,14 +79,14 @@ in a cell.
 
 ```python
 
-   import folium
+import folium
 
-   url_pattern = tms.url_pattern
+url_pattern = tms.url_pattern
 
-   example_map = folium.Map()
-   folium.TileLayer(tiles=url_pattern, attr='GeoPySpark').add_to(example_map)
+example_map = folium.Map()
+folium.TileLayer(tiles=url_pattern, attr='GeoPySpark').add_to(example_map)
 
-   example_map
+example_map
 ```
 
 ## Custom Rendering Functions
@@ -116,85 +116,85 @@ map as above.
 
 ```python
 
-   from PIL import Image
-   import numpy as np
+from PIL import Image
+import numpy as np
 
-   def hex_to_rgb(value):
-      """Return (red, green, blue) for the color given as #rrggbb."""
-      value = value.lstrip('#')
-      lv = len(value)
-      return tuple(int(value[i:i + lv // 3], 16) for i in range(0, lv, lv // 3))
+def hex_to_rgb(value):
+  """Return (red, green, blue) for the color given as #rrggbb."""
+  value = value.lstrip('#')
+  lv = len(value)
+  return tuple(int(value[i:i + lv // 3], 16) for i in range(0, lv, lv // 3))
 
-   nlcd_color_map =  { 0  : "#00000000",
-                       11 : "#526095FF",     # Open Water
-                       12 : "#FFFFFFFF",     # Perennial Ice/Snow
-                       21 : "#D28170FF",     # Low Intensity Residential
-                       22 : "#EE0006FF",     # High Intensity Residential
-                       23 : "#990009FF",     # Commercial/Industrial/Transportation
-                       31 : "#BFB8B1FF",     # Bare Rock/Sand/Clay
-                       32 : "#969798FF",     # Quarries/Strip Mines/Gravel Pits
-                       33 : "#382959FF",     # Transitional
-                       41 : "#579D57FF",     # Deciduous Forest
-                       42 : "#2A6B3DFF",     # Evergreen Forest
-                       43 : "#A6BF7BFF",     # Mixed Forest
-                       51 : "#BAA65CFF",     # Shrubland
-                       61 : "#45511FFF",     # Orchards/Vineyards/Other
-                       71 : "#D0CFAAFF",     # Grasslands/Herbaceous
-                       81 : "#CCC82FFF",     # Pasture/Hay
-                       82 : "#9D5D1DFF",     # Row Crops
-                       83 : "#CD9747FF",     # Small Grains
-                       84 : "#A7AB9FFF",     # Fallow
-                       85 : "#E68A2AFF",     # Urban/Recreational Grasses
-                       91 : "#B6D8F5FF",     # Woody Wetlands
-                       92 : "#B6D8F5FF" }    # Emergent Herbaceous Wetlands
+nlcd_color_map =  { 0  : "#00000000",
+                   11 : "#526095FF",     # Open Water
+                   12 : "#FFFFFFFF",     # Perennial Ice/Snow
+                   21 : "#D28170FF",     # Low Intensity Residential
+                   22 : "#EE0006FF",     # High Intensity Residential
+                   23 : "#990009FF",     # Commercial/Industrial/Transportation
+                   31 : "#BFB8B1FF",     # Bare Rock/Sand/Clay
+                   32 : "#969798FF",     # Quarries/Strip Mines/Gravel Pits
+                   33 : "#382959FF",     # Transitional
+                   41 : "#579D57FF",     # Deciduous Forest
+                   42 : "#2A6B3DFF",     # Evergreen Forest
+                   43 : "#A6BF7BFF",     # Mixed Forest
+                   51 : "#BAA65CFF",     # Shrubland
+                   61 : "#45511FFF",     # Orchards/Vineyards/Other
+                   71 : "#D0CFAAFF",     # Grasslands/Herbaceous
+                   81 : "#CCC82FFF",     # Pasture/Hay
+                   82 : "#9D5D1DFF",     # Row Crops
+                   83 : "#CD9747FF",     # Small Grains
+                   84 : "#A7AB9FFF",     # Fallow
+                   85 : "#E68A2AFF",     # Urban/Recreational Grasses
+                   91 : "#B6D8F5FF",     # Woody Wetlands
+                   92 : "#B6D8F5FF" }    # Emergent Herbaceous Wetlands
 
-   def rgba_functions(color_map):
-      m = {}
-      for key in color_map:
-         m[key] = hex_to_rgb(color_map[key])
+def rgba_functions(color_map):
+  m = {}
+  for key in color_map:
+     m[key] = hex_to_rgb(color_map[key])
 
 
-      def r(v):
-         if v in m:
-            return m[v][0]
-         else:
-            return 0
+  def r(v):
+     if v in m:
+        return m[v][0]
+     else:
+        return 0
 
-      def g(v):
-         if v in m:
-            return m[v][1]
-         else:
-            return 0
+  def g(v):
+     if v in m:
+        return m[v][1]
+     else:
+        return 0
 
-      def b(v):
-         if v in m:
-            return m[v][2]
-         else:
-            return 0
+  def b(v):
+     if v in m:
+        return m[v][2]
+     else:
+        return 0
 
-      def a(v):
-         if v in m:
-            return m[v][3]
-         else:
-            return 0x00
+  def a(v):
+     if v in m:
+        return m[v][3]
+     else:
+        return 0x00
 
-      return (np.vectorize(r), np.vectorize(g), np.vectorize(b), np.vectorize(a))
+  return (np.vectorize(r), np.vectorize(g), np.vectorize(b), np.vectorize(a))
 
-   def render_nlcd(tile):
-      '''
-      Assumes that the tile is a multiband tile with a single band.
-      (meaning shape = (1, cols, rows))
-      '''
-      arr = tile.cells[0]
-      (r, g, b, a) = rgba_functions(nlcd_color_map)
+def render_nlcd(tile):
+  '''
+  Assumes that the tile is a multiband tile with a single band.
+  (meaning shape = (1, cols, rows))
+  '''
+  arr = tile.cells[0]
+  (r, g, b, a) = rgba_functions(nlcd_color_map)
 
-      rgba = np.dstack([r(arr), g(arr), b(arr), a(arr)]).astype('uint8')
+  rgba = np.dstack([r(arr), g(arr), b(arr), a(arr)]).astype('uint8')
 
-      img = Image.fromarray(rgba, mode='RGBA')
+  img = Image.fromarray(rgba, mode='RGBA')
 
-      return img
+  return img
 
-   tms = gps.TMS.build(nlcd_pyramid, display=render_nlcd)
+tms = gps.TMS.build(nlcd_pyramid, display=render_nlcd)
 ```
 
 You will likely observe noticeably slower performance compared to the earlier
@@ -218,38 +218,38 @@ some of the helper functions from the previous example.
 
 ```python
 
-   from scipy.interpolate import interp2d
+from scipy.interpolate import interp2d
 
-   layers = []
+layers = []
 
-   for zoom in range(0, 4):
-      layers.append(gps.query(uri="s3://azavea-datahub/catalog",
-                              layer_name="us-ned-tms-epsg3857",
-                              layer_zoom=zoom))
+for zoom in range(0, 4):
+  layers.append(gps.query(uri="s3://azavea-datahub/catalog",
+                          layer_name="us-ned-tms-epsg3857",
+                          layer_zoom=zoom))
 
-   ned_pyramid = gps.Pyramid(layers)
+ned_pyramid = gps.Pyramid(layers)
 
-   def comp(tiles):
-      elev256 = tiles[0].cells[0]
-      grid256 = range(256)
-      f = interp2d(grid256, grid256, elev256)
-      grid512 = np.arange(0, 256, 0.5)
-      elev = f(grid512, grid512)
+def comp(tiles):
+  elev256 = tiles[0].cells[0]
+  grid256 = range(256)
+  f = interp2d(grid256, grid256, elev256)
+  grid512 = np.arange(0, 256, 0.5)
+  elev = f(grid512, grid512)
 
-      land_use = tiles[1].cells[0]
+  land_use = tiles[1].cells[0]
 
-      arr = land_use
-      arr[elev < 1371] = 0
+  arr = land_use
+  arr[elev < 1371] = 0
 
-      (r, g, b, a) = rgba_functions(nlcd_color_map)
+  (r, g, b, a) = rgba_functions(nlcd_color_map)
 
-      rgba = np.dstack([r(arr), g(arr), b(arr), a(arr)]).astype('uint8')
+  rgba = np.dstack([r(arr), g(arr), b(arr), a(arr)]).astype('uint8')
 
-      img = Image.fromarray(rgba, mode='RGBA')
+  img = Image.fromarray(rgba, mode='RGBA')
 
-      return img
+  return img
 
-   tms = gps.TMS.build([ned_pyramid, nlcd_pyramid], display=comp)
+tms = gps.TMS.build([ned_pyramid, nlcd_pyramid], display=comp)
 ```
 
 This example shows the major pitfall likely to be encountered in this

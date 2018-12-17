@@ -156,12 +156,12 @@ units of time that can be used to space apart data in the catalog.
 
 ```python
 
-    # This will create a catalog called, "spacetime-catalog" in the /tmp directory.
-    # Within it, a layer named, "spacetime-layer" will be saved and each indice will be spaced apart by SECONDS
-    gps.write(uri='file:///tmp/spacetime-catalog',
-              layer_name='spacetime-layer',
-              tiled_raster_layer=space_time_tiled_layer,
-              time_unit=gps.TimeUnit.SECONDS)
+# This will create a catalog called, "spacetime-catalog" in the /tmp directory.
+# Within it, a layer named, "spacetime-layer" will be saved and each indice will be spaced apart by SECONDS
+gps.write(uri='file:///tmp/spacetime-catalog',
+          layer_name='spacetime-layer',
+          tiled_raster_layer=space_time_tiled_layer,
+          time_unit=gps.TimeUnit.SECONDS)
 ```
 
 ### Saving a Pyramid
@@ -177,14 +177,14 @@ through the layers of the `Pyramid` and save one individually.
 
 ```python3
 
-    for zoom, layer in space_time_pyramid.levels.items():
-        # Because we've already written a layer of the same name to the same catalog with a zoom level of 7,
-        # we will skip writing the level 7 layer.
-        if zoom != 7:
-            gps.write(uri='file:///tmp/spacetime-catalog',
-                      layer_name='spacetime-layer',
-                      tiled_raster_layer=layer,
-                      time_unit=gps.TimeUnit.SECONDS)
+for zoom, layer in space_time_pyramid.levels.items():
+    # Because we've already written a layer of the same name to the same catalog with a zoom level of 7,
+    # we will skip writing the level 7 layer.
+    if zoom != 7:
+        gps.write(uri='file:///tmp/spacetime-catalog',
+                  layer_name='spacetime-layer',
+                  tiled_raster_layer=layer,
+                  time_unit=gps.TimeUnit.SECONDS)
 ```
 
 ## Reading Metadata From a Saved Layer
@@ -195,10 +195,10 @@ no difference between spatial and spatial-temporal layers when using this functi
 
 ```python3
 
-    # Reads the Metadata from the spatial-layer of the spatial-catalog for zoom level 11
-    gps.read_layer_metadata(uri="file:///tmp/spatial-catalog",
-                            layer_name="spatial-layer",
-                            layer_zoom=11)
+# Reads the Metadata from the spatial-layer of the spatial-catalog for zoom level 11
+gps.read_layer_metadata(uri="file:///tmp/spatial-catalog",
+                        layer_name="spatial-layer",
+                        layer_zoom=11)
 ```
 
 ## Reading a Tile From a Saved Layer
@@ -211,29 +211,29 @@ or not the specified tile exists.
 
 ```python3
 
-    # The Tile being read will be the smallest key of the layer
-    min_key = spatial_tiled_layer.layer_metadata.bounds.minKey
+# The Tile being read will be the smallest key of the layer
+min_key = spatial_tiled_layer.layer_metadata.bounds.minKey
 
-    gps.read_value(uri="file:///tmp/spatial-catalog",
-                   layer_name="spatial-layer",
-                   layer_zoom=11,
-                   col=min_key.col,
-                   row=min_key.row)
+gps.read_value(uri="file:///tmp/spatial-catalog",
+               layer_name="spatial-layer",
+               layer_zoom=11,
+               col=min_key.col,
+               row=min_key.row)
 ```
 
 ### Reading a Tile From a Saved, Spatial-Temporal Layer
 
 ```python3
 
-    # The Tile being read will be the largest key of the layer
-    max_key = space_time_tiled_layer.layer_metadata.bounds.maxKey
+# The Tile being read will be the largest key of the layer
+max_key = space_time_tiled_layer.layer_metadata.bounds.maxKey
 
-    gps.read_value(uri="file:///tmp/spacetime-catalog",
-                   layer_name="spacetime-layer",
-                   layer_zoom=7,
-                   col=max_key.col,
-                   row=max_key.row,
-                   zdt=max_key.instant)
+gps.read_value(uri="file:///tmp/spacetime-catalog",
+               layer_name="spacetime-layer",
+               layer_zoom=7,
+               col=max_key.col,
+               row=max_key.row,
+               zdt=max_key.instant)
 ```
 
 ## Reading a Layer
@@ -250,10 +250,10 @@ layer is read.
 
 ```python3
 
-    # Returns the entire layer that was at zoom level 11.
-    gps.query(uri="file:///tmp/spatial-catalog",
-              layer_name="spatial-layer",
-              layer_zoom=11)
+# Returns the entire layer that was at zoom level 11.
+gps.query(uri="file:///tmp/spatial-catalog",
+          layer_name="spatial-layer",
+          layer_zoom=11)
 ```
 
 ## Querying a Layer
@@ -285,16 +285,16 @@ given are in the same projection.
 
 ```python3
 
-    layer_extent = spatial_tiled_layer.layer_metadata.extent
+layer_extent = spatial_tiled_layer.layer_metadata.extent
 
-    # Creates a Polygon from the cropped Extent of the Layer
-    poly = box(layer_extent.xmin+100, layer_extent.ymin+100, layer_extent.xmax-100, layer_extent.ymax-100)
+# Creates a Polygon from the cropped Extent of the Layer
+poly = box(layer_extent.xmin+100, layer_extent.ymin+100, layer_extent.xmax-100, layer_extent.ymax-100)
 
-    # Returns the region of the layer that was intersected by the Polygon at zoom level 11.
-    gps.query(uri="file:///tmp/spatial-catalog",
-              layer_name="spatial-layer",
-              layer_zoom=11,
-              query_geom=poly)
+# Returns the region of the layer that was intersected by the Polygon at zoom level 11.
+gps.query(uri="file:///tmp/spatial-catalog",
+          layer_name="spatial-layer",
+          layer_zoom=11,
+          query_geom=poly)
 ```
 
 #### When the Queried Geometry is in a Different Projection than the Layer
@@ -306,20 +306,20 @@ the geometry is in.
 
 ```python3
 
-    # The queried Extent is in a different projection than the base layer
-    metadata = spatial_tiled_layer.tile_to_layout(layout=gps.GlobalLayout(), target_crs=4326).layer_metadata
-    metadata.layout_definition.extent, spatial_tiled_layer.layer_metadata.layout_definition.extent
+# The queried Extent is in a different projection than the base layer
+metadata = spatial_tiled_layer.tile_to_layout(layout=gps.GlobalLayout(), target_crs=4326).layer_metadata
+metadata.layout_definition.extent, spatial_tiled_layer.layer_metadata.layout_definition.extent
 
-    # Queries the area of the Extent and returns any intersections
-    querried_spatial_layer = gps.query(uri="file:///tmp/spatial-catalog",
-                                       layer_name="spatial-layer",
-                                       layer_zoom=11,
-                                       query_geom=metadata.layout_definition.extent.to_polygon,
-                                       query_proj="EPSG:4326")
+# Queries the area of the Extent and returns any intersections
+querried_spatial_layer = gps.query(uri="file:///tmp/spatial-catalog",
+                                   layer_name="spatial-layer",
+                                   layer_zoom=11,
+                                   query_geom=metadata.layout_definition.extent.to_polygon,
+                                   query_proj="EPSG:4326")
 
-    # Because we queried the whole Extent of the layer, we should have gotten back the whole thing.
-    querried_extent = querried_spatial_layer.layer_metadata.layout_definition.extent
-    base_extent = spatial_tiled_layer.layer_metadata.layout_definition.extent
+# Because we queried the whole Extent of the layer, we should have gotten back the whole thing.
+querried_extent = querried_spatial_layer.layer_metadata.layout_definition.extent
+base_extent = spatial_tiled_layer.layer_metadata.layout_definition.extent
 ```
 
 ### Querying a Spatial-Temporal Layer
@@ -332,39 +332,39 @@ Querying by Time
 
 ```python3
 
-    min_key = space_time_tiled_layer.layer_metadata.bounds.minKey
+min_key = space_time_tiled_layer.layer_metadata.bounds.minKey
 
-    # Returns a TiledRasterLayer whose keys intersect the given time interval.
-    # In this case, the entire layer will be read.
-    gps.query(uri="file:///tmp/spacetime-catalog",
-              layer_name="spacetime-layer",
-              layer_zoom=7,
-              time_intervals=[min_key.instant, max_key.instant])
+# Returns a TiledRasterLayer whose keys intersect the given time interval.
+# In this case, the entire layer will be read.
+gps.query(uri="file:///tmp/spacetime-catalog",
+          layer_name="spacetime-layer",
+          layer_zoom=7,
+          time_intervals=[min_key.instant, max_key.instant])
 
-    # It's possible to query a single time interval. By doing so, only Tiles that contain the time given will be
-    # returned.
-    gps.query(uri="file:///tmp/spacetime-catalog",
-              layer_name="spacetime-layer",
-              layer_zoom=7,
-              time_intervals=[min_key.instant])
+# It's possible to query a single time interval. By doing so, only Tiles that contain the time given will be
+# returned.
+gps.query(uri="file:///tmp/spacetime-catalog",
+          layer_name="spacetime-layer",
+          layer_zoom=7,
+          time_intervals=[min_key.instant])
 ```
 
 #### Querying by Space and Time
 
 ```python3
 
-    # In addition to Polygons, one can also query using MultiPolygons.
-    poly_1 = box(140.0, 60.0, 150.0, 65.0)
-    poly_2 = box(160.0, 70.0, 179.0, 89.0)
-    multi_poly = MultiPolygon(poly_1, poly_2)
+# In addition to Polygons, one can also query using MultiPolygons.
+poly_1 = box(140.0, 60.0, 150.0, 65.0)
+poly_2 = box(160.0, 70.0, 179.0, 89.0)
+multi_poly = MultiPolygon(poly_1, poly_2)
 
-    # Returns a TiledRasterLayer that contains the tiles which intersect the given polygons and are within the
-    # specified time interval.
-    gps.query(uri="file:///tmp/spacetime-catalog",
-              layer_name="spacetime-layer",
-              layer_zoom=7,
-              query_geom=multi_poly,
-              time_intervals=[min_key.instant, max_key.instant])
+# Returns a TiledRasterLayer that contains the tiles which intersect the given polygons and are within the
+# specified time interval.
+gps.query(uri="file:///tmp/spacetime-catalog",
+          layer_name="spacetime-layer",
+          layer_zoom=7,
+          query_geom=multi_poly,
+          time_intervals=[min_key.instant, max_key.instant])
 ```
 
 ### Non-Intersecting Queries
@@ -374,16 +374,16 @@ then an empty `TiledRasterLayer` will be returned.
 
 ```python3
 
-    # A non-intersecting geometry that we will use to query our layer.
-    bad_area = box(-100, -100, 0, 0)
+# A non-intersecting geometry that we will use to query our layer.
+bad_area = box(-100, -100, 0, 0)
 
-    # This will return an empty TiledRasterLayer
-    empty_layer = gps.query(uri="file:///tmp/spatial-catalog",
-                            layer_name="spatial-layer",
-                            layer_zoom=11,
-                            query_geom=bad_area)
+# This will return an empty TiledRasterLayer
+empty_layer = gps.query(uri="file:///tmp/spatial-catalog",
+                        layer_name="spatial-layer",
+                        layer_zoom=11,
+                        query_geom=bad_area)
 
-    empty_layer.isEmpty()
+empty_layer.isEmpty()
 ```
 
 ## AttributeStore
@@ -400,19 +400,19 @@ layers and store additional, user defined, attributes.
 
 ```python3
 
-   store = gps.AttributeStore(uri='file:///tmp/spatial-catalog')
+store = gps.AttributeStore(uri='file:///tmp/spatial-catalog')
 
-   # Check if layer exists
-   store.contains('spatial-layer', 11)
+# Check if layer exists
+store.contains('spatial-layer', 11)
 
-   # List layers stored in the catalog, giving list of AttributeStore.Attributes
-   attributes_list = store.layers
+# List layers stored in the catalog, giving list of AttributeStore.Attributes
+attributes_list = store.layers
 
-   # Ask for layer attributes by name
-   attributes = store.layer('spatial-layer', 11)
+# Ask for layer attributes by name
+attributes = store.layer('spatial-layer', 11)
 
-   # Read layer metadata
-   attributes.layer_metadata()
+# Read layer metadata
+attributes.layer_metadata()
 ```
 
 ### User Defined Attributes
@@ -424,34 +424,34 @@ overwrite this attribute.
 
 ```python
 
-   # Reading layer metadata as underlying JSON value
-   attributes.read("metadata")
+# Reading layer metadata as underlying JSON value
+attributes.read("metadata")
 ```
 
 Output:
 
 ```
- {'header': {'format': 'file',
-   'keyClass': 'geotrellis.spark.SpatialKey',
-   'path': 'spatial-layer/11',
-   'valueClass': 'geotrellis.raster.MultibandTile'},
-  'keyIndex': {'properties': {'keyBounds': {'maxKey': {'col': 1485, 'row': 996}, 'minKey': {'col': 1479, 'row': 984}}},
-   'type': 'zorder'},
-  'metadata': {'bounds': {'maxKey': {'col': 1485, 'row': 996},
-    'minKey': {'col': 1479, 'row': 984}},
-   'cellType': 'int16',
-   'crs': '+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +wktext +no_defs ',
-   'extent': {'xmax': 9024345.159093022,
-    'xmin': 8905559.263461886,
-    'ymax': 781182.2141882492,
-    'ymin': 542452.4856863784},
-   'layoutDefinition': {'extent': {'xmax': 20037508.342789244,
-     'xmin': -20037508.342789244,
-     'ymax': 20037508.342789244,
-     'ymin': -20037508.342789244},
-    'tileLayout': {'layoutCols': 2048, 'layoutRows': 2048, 'tileCols': 256, 'tileRows': 256}}},
-  'schema': {...}
- }
+{'header': {'format': 'file',
+ 'keyClass': 'geotrellis.spark.SpatialKey',
+ 'path': 'spatial-layer/11',
+ 'valueClass': 'geotrellis.raster.MultibandTile'},
+'keyIndex': {'properties': {'keyBounds': {'maxKey': {'col': 1485, 'row': 996}, 'minKey': {'col': 1479, 'row': 984}}},
+ 'type': 'zorder'},
+'metadata': {'bounds': {'maxKey': {'col': 1485, 'row': 996},
+  'minKey': {'col': 1479, 'row': 984}},
+ 'cellType': 'int16',
+ 'crs': '+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +wktext +no_defs ',
+ 'extent': {'xmax': 9024345.159093022,
+  'xmin': 8905559.263461886,
+  'ymax': 781182.2141882492,
+  'ymin': 542452.4856863784},
+ 'layoutDefinition': {'extent': {'xmax': 20037508.342789244,
+   'xmin': -20037508.342789244,
+   'ymax': 20037508.342789244,
+   'ymin': -20037508.342789244},
+  'tileLayout': {'layoutCols': 2048, 'layoutRows': 2048, 'tileCols': 256, 'tileRows': 256}}},
+'schema': {...}
+}
 ```
 
 Otherwise you are free to store any additional attribute that is associated
@@ -459,9 +459,8 @@ with the layer. `AttributeStore.Attributes` provides `write` and `read`
 functions that accept and provide a dictionary.
 
 ```python3
-
-   attributes.write("notes", {'a': 3, 'b': 5})
-   notes_dict = attributes.read("notes")
+attributes.write("notes", {'a': 3, 'b': 5})
+notes_dict = attributes.read("notes")
 ```
 
 A common use case for this is to store the layer histogram when writing a layer
@@ -469,23 +468,23 @@ so it may be used for rendering later.
 
 ```python3
 
-   # Calculate the histogram
-   hist = spatial_tiled_layer.get_histogram()
+# Calculate the histogram
+hist = spatial_tiled_layer.get_histogram()
 
-   # GeoPySpark classes have to_dict as a convention when appropriate
-   hist_dict = hist.to_dict()
+# GeoPySpark classes have to_dict as a convention when appropriate
+hist_dict = hist.to_dict()
 
-   # Writing a dictionary that gets encoded as JSON
-   attributes.write("histogram", hist_dict)
+# Writing a dictionary that gets encoded as JSON
+attributes.write("histogram", hist_dict)
 
-   # Reverse the process
-   hist_read_dict = attributes.read("histogram")
+# Reverse the process
+hist_read_dict = attributes.read("histogram")
 
-   # GeoPySpark classes have from_dict static method as a convention
-   hist_read = gps.Histogram.from_dict(hist_read_dict)
+# GeoPySpark classes have from_dict static method as a convention
+hist_read = gps.Histogram.from_dict(hist_read_dict)
 
-   # Use the histogram after round trip
-   hist.min_max()
+# Use the histogram after round trip
+hist.min_max()
 ```
 
 ### AttributeStore Caching
@@ -501,12 +500,12 @@ it is worth while keeping track of a class instance and reusing it
 
 ```python3
 
-   # Retrieve already created instance if its been asked for before
-   store = gps.AttributeStore.cached(uri='file:///tmp/spatial-catalog-2')
+# Retrieve already created instance if its been asked for before
+store = gps.AttributeStore.cached(uri='file:///tmp/spatial-catalog-2')
 
-   # Catalog functions have optional store parameter that allows its reuse
-   gps.write(uri='file:///tmp/spatial-catalog-2',
-          layer_name='spatial-layer',
-          tiled_raster_layer=spatial_tiled_layer,
-          store=store)
+# Catalog functions have optional store parameter that allows its reuse
+gps.write(uri='file:///tmp/spatial-catalog-2',
+      layer_name='spatial-layer',
+      tiled_raster_layer=spatial_tiled_layer,
+      store=store)
 ```

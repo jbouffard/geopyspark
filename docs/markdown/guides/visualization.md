@@ -14,19 +14,19 @@ curl -o /tmp/cropped.tif https://s3.amazonaws.com/geopyspark-test/example-files/
 
 ```python3
 
-    import geopyspark as gps
-    import matplotlib.pyplot as plt
+import geopyspark as gps
+import matplotlib.pyplot as plt
 
-    from colortools import Color
-    from pyspark import SparkContext
+from colortools import Color
+from pyspark import SparkContext
 
-    %matplotlib inline
+%matplotlib inline
 
-    conf = gps.geopyspark_conf(master="local[*]", appName="visualization")
-    pysc = SparkContext(conf=conf)
+conf = gps.geopyspark_conf(master="local[*]", appName="visualization")
+pysc = SparkContext(conf=conf)
 
-    raster_layer = gps.geotiff.get(layer_type=gps.LayerType.SPATIAL, uri="/tmp/cropped.tif")
-    tiled_layer = raster_layer.tile_to_layout(layout=gps.GlobalLayout(), target_crs=3857)
+raster_layer = gps.geotiff.get(layer_type=gps.LayerType.SPATIAL, uri="/tmp/cropped.tif")
+tiled_layer = raster_layer.tile_to_layout(layout=gps.GlobalLayout(), target_crs=3857)
 ```
 
 ## Pyramid
@@ -62,18 +62,18 @@ a `TiledRasterLayer` has a `zoom_level` of 12 then the resulting
 12.
 
 ```python3
-    pyramided = tiled_layer.pyramid()
+pyramided = tiled_layer.pyramid()
 ```
 
 #### Contrusting a Pyramid Manually
 
 ```python3
 
-    # TiledRasterLayers can be passed in as a list
-    gps.Pyramid([tiled_layer.tile_to_layout(gps.GlobalLayout(zoom=x)) for x in range(0, 13)])
+# TiledRasterLayers can be passed in as a list
+gps.Pyramid([tiled_layer.tile_to_layout(gps.GlobalLayout(zoom=x)) for x in range(0, 13)])
 
-    # Or TiledRasterLayers can be given as a dict where the key is the zoom
-    gps.Pyramid({x: tiled_layer.tile_to_layout(gps.GlobalLayout(zoom=x)) for x in range(0, 13)})
+# Or TiledRasterLayers can be given as a dict where the key is the zoom
+gps.Pyramid({x: tiled_layer.tile_to_layout(gps.GlobalLayout(zoom=x)) for x in range(0, 13)})
 ```
 
 ### Computing the Histogram of a Pyramid
@@ -83,7 +83,7 @@ within a `Pyramid` via the `get_histogram` method.
 
 ```python3
 
-    hist = pyramided.get_histogram()
+hist = pyramided.get_histogram()
 ```
 
 ### RDD Methods
@@ -107,9 +107,9 @@ getting a result where nothing has changed if neither of the
 
 ```python3
 
-    pyramided + 1
+pyramided + 1
 
-    (2 * (pyramided + 2)) / 3
+(2 * (pyramided + 2)) / 3
 ```
 
 When performing operations on two or more `Pyramid`s, if the
@@ -119,8 +119,8 @@ resulting `Pyramid` will only have as many levels as the source
 
 ```python3
 
-    small_pyramid = gps.Pyramid({x: tiled_layer.tile_to_layout(gps.GlobalLayout(zoom=x)) for x in range(0, 5)})
-    result = pyramided + small_pyramid
+small_pyramid = gps.Pyramid({x: tiled_layer.tile_to_layout(gps.GlobalLayout(zoom=x)) for x in range(0, 5)})
+result = pyramided + small_pyramid
 ```
 
 ## ColorMap
@@ -146,9 +146,9 @@ installed.
 
 ```python3
 
-    gps.get_colors_from_matplotlib(ramp_name="viridis")
+gps.get_colors_from_matplotlib(ramp_name="viridis")
 
-    gps.get_colors_from_matplotlib(ramp_name="hot", num_colors=150)
+gps.get_colors_from_matplotlib(ramp_name="hot", num_colors=150)
 ```
 
 #### From ColorTools
@@ -162,9 +162,9 @@ installed.
 
 ```python3
 
-    colors = [Color('green'), Color('red'), Color('blue')]
+colors = [Color('green'), Color('red'), Color('blue')]
 
-    colors_color_ramp = gps.get_colors_from_colors(colors=colors)
+colors_color_ramp = gps.get_colors_from_colors(colors=colors)
 ```
 
 ### Creating a ColorMap
@@ -176,16 +176,16 @@ the inputs it's given.
 
 ```python3
 
-    gps.ColorMap.from_histogram(histogram=hist, color_list=colors_color_ramp)
+gps.ColorMap.from_histogram(histogram=hist, color_list=colors_color_ramp)
 ```
 
 #### From a List of Colors
 
 ```python3
 
-    # Creates a ColorMap instance that will have three colors for the values that are less than or equal to 0, 250, and
-    # 1000.
-    gps.ColorMap.from_colors(breaks=[0, 250, 1000], color_list=colors_color_ramp)
+# Creates a ColorMap instance that will have three colors for the values that are less than or equal to 0, 250, and
+# 1000.
+gps.ColorMap.from_colors(breaks=[0, 250, 1000], color_list=colors_color_ramp)
 ```
 
 #### For NLCD Data
@@ -196,7 +196,7 @@ and passing in a list of breaks.
 
 ```python3
 
-    gps.ColorMap.nlcd_colormap()
+gps.ColorMap.nlcd_colormap()
 ```
 
 #### From a Break Map
@@ -207,15 +207,15 @@ that maps tile values to colors.
 
 ```python3
 
-    # The three tile values are 1, 2, and 3 and they correspond to the colors 0x00000000, 0x00000001, and 0x00000002
-    # respectively.
-    break_map = {
-        1: 0x00000000,
-        2: 0x00000001,
-        3: 0x00000002
-    }
+# The three tile values are 1, 2, and 3 and they correspond to the colors 0x00000000, 0x00000001, and 0x00000002
+# respectively.
+break_map = {
+    1: 0x00000000,
+    2: 0x00000001,
+    3: 0x00000002
+}
 
-    gps.ColorMap.from_break_map(break_map=break_map)
+gps.ColorMap.from_break_map(break_map=break_map)
 ```
 
 #### More General Build Method
@@ -227,17 +227,17 @@ same inputs used in the previous examples.
 
 ```python3
 
-    # build using a Histogram
-    gps.ColorMap.build(breaks=hist, colors=colors_color_ramp)
+# build using a Histogram
+gps.ColorMap.build(breaks=hist, colors=colors_color_ramp)
 
-    # It is also possible to pass in the name of Matplotlib color ramp instead of constructing it yourself
-    gps.ColorMap.build(breaks=hist, colors="viridis")
+# It is also possible to pass in the name of Matplotlib color ramp instead of constructing it yourself
+gps.ColorMap.build(breaks=hist, colors="viridis")
 
-    # build using Colors
-    gps.ColorMap.build(breaks=colors_color_ramp, colors=colors)
+# build using Colors
+gps.ColorMap.build(breaks=colors_color_ramp, colors=colors)
 
-    # buld using breaks
-    gps.ColorMap.build(breaks=break_map)
+# buld using breaks
+gps.ColorMap.build(breaks=break_map)
 ```
 
 #### Additional Coloring Options

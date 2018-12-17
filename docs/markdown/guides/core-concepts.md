@@ -8,10 +8,10 @@ types are represented in GeoPySpark.
 Before begining, all examples in this guide need the following boilerplate
 code:
 
-```pyton3
-   import datetime
-   import numpy as np
-   import geopyspark as gps
+```python3
+import datetime
+import numpy as np
+import geopyspark as gps
 ```
 
 ## Rasters
@@ -28,15 +28,15 @@ bands, even if the original raster just contained one.
 
 ```python3
 
-    arr = np.array([[[0, 0, 0, 0],
-                     [1, 1, 1, 1],
-                     [2, 2, 2, 2]]], dtype=np.int16)
+arr = np.array([[[0, 0, 0, 0],
+                 [1, 1, 1, 1],
+                 [2, 2, 2, 2]]], dtype=np.int16)
 
-    # The resulting Tile will set -10 as the no_data_value for the raster
-    gps.Tile.from_numpy_array(numpy_array=arr, no_data_value=-10)
+# The resulting Tile will set -10 as the no_data_value for the raster
+gps.Tile.from_numpy_array(numpy_array=arr, no_data_value=-10)
 
-    # The resulting Tile will have no no_data_value
-    gps.Tile.from_numpy_array(numpy_array=arr)
+# The resulting Tile will have no no_data_value
+gps.Tile.from_numpy_array(numpy_array=arr)
 ```
 
 ## Extent
@@ -49,8 +49,8 @@ box*.
 
 ```python3
 
-    # Creates an Extent that has an area of 100.0
-    extent = gps.Extent(0.0, 0.0, 10.0, 10.0)
+# Creates an Extent that has an area of 100.0
+extent = gps.Extent(0.0, 0.0, 10.0, 10.0)
 ```
 
 ## ProjectedExtent
@@ -61,14 +61,14 @@ used to indicate the CRS of the `ProjectedExtent`.
 
 ```python3
 
-    # Using an EPSG code
+# Using an EPSG code
 
-    gps.ProjectedExtent(extent=extent, epsg=3857)
+gps.ProjectedExtent(extent=extent, epsg=3857)
 
-    # Using a Proj4 String
+# Using a Proj4 String
 
-    proj4 = "+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +a=6378137 +b=6378137 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs "
-    gps.ProjectedExtent(extent=extent, proj4=proj4)
+proj4 = "+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +a=6378137 +b=6378137 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs "
+gps.ProjectedExtent(extent=extent, proj4=proj4)
 ```
 
 ## TemporalProjectedExtent
@@ -80,8 +80,8 @@ of `datetime.datetime`.
 
 ```python3
 
-    time = datetime.datetime.now()
-    gps.TemporalProjectedExtent(extent=extent, instant=time, epsg=3857)
+time = datetime.datetime.now()
+gps.TemporalProjectedExtent(extent=extent, instant=time, epsg=3857)
 ```
 
 ## TileLayout
@@ -93,10 +93,9 @@ and `tileRows` tell how many columns and rows each individual raster has.
 
 ```python3
 
-    # Describes a layer where there are four rasters in a 2x2 grid. Each raster has 256 cols and rows.
+# Describes a layer where there are four rasters in a 2x2 grid. Each raster has 256 cols and rows.
 
-    tile_layout = gps.TileLayout(layoutCols=2, layoutRows=2, tileCols=256, tileRows=256)
-    tile_layout
+tile_layout = gps.TileLayout(layoutCols=2, layoutRows=2, tileCols=256, tileRows=256)
 ```
 
 ### LayoutDefinition
@@ -105,9 +104,7 @@ and `tileRows` tell how many columns and rows each individual raster has.
 are orginized in a layer as well as the area covered by the grid.
 
 ```python3
-
-    layout_definition = gps.LayoutDefinition(extent=extent, tileLayout=tile_layout)
-    layout_definition
+layout_definition = gps.LayoutDefinition(extent=extent, tileLayout=tile_layout)
 ```
 
 
@@ -131,14 +128,14 @@ performed.**
 
 ```python3
 
-    # Creates a LocalLayout where each tile within the grid will be 256x256 pixels.
-    gps.LocalLayout()
+# Creates a LocalLayout where each tile within the grid will be 256x256 pixels.
+gps.LocalLayout()
 
-    # Creates a LocalLayout where each tile within the grid will be 512x512 pixels.
-    gps.LocalLayout(tile_size=512)
+# Creates a LocalLayout where each tile within the grid will be 512x512 pixels.
+gps.LocalLayout(tile_size=512)
 
-    # Creates a LocalLayout where each tile within the grid will be 256x512 pixels.
-    gps.LocalLayout(tile_cols=256, tile_rows=512)
+# Creates a LocalLayout where each tile within the grid will be 256x512 pixels.
+gps.LocalLayout(tile_cols=256, tile_rows=512)
 ```
 
 ### GlobalLayout
@@ -154,11 +151,11 @@ is to be dispalyed in a TMS server.**
 
 ```python3
 
-    # Creates a GobalLayout instance with the default values
-    gps.GlobalLayout()
+# Creates a GobalLayout instance with the default values
+gps.GlobalLayout()
 
-    # Creates a GlobalLayout instance for a zoom of 12
-    gps.GlobalLayout(zoom=12)
+# Creates a GlobalLayout instance for a zoom of 12
+gps.GlobalLayout(zoom=12)
 ```
 
 You may have noticed from the above two examples that `GlobalLayout`
@@ -177,7 +174,7 @@ spatial data.
 
 ```python3
 
-    gps.SpatialKey(col=0, row=0)
+gps.SpatialKey(col=0, row=0)
 ```
 
 ## SpaceTimeKey
@@ -192,7 +189,7 @@ deal with spatial-temporal data.
 
 ```python3
 
-    gps.SpaceTimeKey(col=0, row=0, instant=time)
+gps.SpaceTimeKey(col=0, row=0, instant=time)
 ```
 
 ## Bounds
@@ -205,20 +202,20 @@ the grid and the `maxKey` is the right, bottommost cell.
 
 ```python3
 
-    # Creating a Bounds from SpatialKeys
+# Creating a Bounds from SpatialKeys
 
-    min_spatial_key = gps.SpatialKey(0, 0)
-    max_spatial_key = gps.SpatialKey(10, 10)
+min_spatial_key = gps.SpatialKey(0, 0)
+max_spatial_key = gps.SpatialKey(10, 10)
 
-    bounds = gps.Bounds(min_spatial_key, max_spatial_key)
-    bounds
+bounds = gps.Bounds(min_spatial_key, max_spatial_key)
+bounds
 
-    # Creating a Bounds from SpaceTimeKeys
+# Creating a Bounds from SpaceTimeKeys
 
-    min_space_time_key = gps.SpaceTimeKey(0, 0, 1.0)
-    max_space_time_key = gps.SpaceTimeKey(10, 10, 1.0)
+min_space_time_key = gps.SpaceTimeKey(0, 0, 1.0)
+max_space_time_key = gps.SpaceTimeKey(10, 10, 1.0)
 
-    gps.Bounds(min_space_time_key, max_space_time_key)
+gps.Bounds(min_space_time_key, max_space_time_key)
 ```
 
 ## Metadata
@@ -235,11 +232,11 @@ easier means. For `RasterLayer`, one can call the method,
 
 ```python3
 
-    # Creates Metadata for a layer with rasters that have a cell type of int16 with the previously defined
-    # bounds, crs, extent, and layout definition.
-    gps.Metadata(bounds=bounds,
-                 crs=proj4,
-                 cell_type=gps.CellType.INT16.value,
-                 extent=extent,
-                 layout_definition=layout_definition)
+# Creates Metadata for a layer with rasters that have a cell type of int16 with the previously defined
+# bounds, crs, extent, and layout definition.
+gps.Metadata(bounds=bounds,
+             crs=proj4,
+             cell_type=gps.CellType.INT16.value,
+             extent=extent,
+             layout_definition=layout_definition)
 ```

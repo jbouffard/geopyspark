@@ -22,8 +22,8 @@ Unlike `SpatialPartitionStrategy` and `SpaceTimePartitionStrategy`,
 
 ```python3
 
-  # Creates a HashPartitionStrategy with 128 partitions
-  gps.HashPartitionStrategy(num_partitions=128)
+# Creates a HashPartitionStrategy with 128 partitions
+gps.HashPartitionStrategy(num_partitions=128)
 ```
 
 ## Spatial Partitioning Strategies
@@ -44,8 +44,8 @@ This will only work on `SPATIAL` layers.
 
 ```python3
 
-  # Creates a SpatialPartitionStrategy with 128 partitions
-  gps.SpatialPartitionStrategy(num_partitions=128)
+# Creates a SpatialPartitionStrategy with 128 partitions
+gps.SpatialPartitionStrategy(num_partitions=128)
 ```
 
 ### SpaceTimePartitionStrategy
@@ -56,8 +56,8 @@ same partition.  This will only work on `SPACETIME` layers.
 
 ```python3
 
-  # Creates a SpaceTimePartitionStrategy with 128 partitions
-  # and temporal resolution of 5 weeks. This means that
-  # it will try and group the data in units of 5 weeks.
-  gps.SpaceTimePartitionStrategy(time_unit=gps.WEEKS, num_partitions=128, time_resolution=5)
+# Creates a SpaceTimePartitionStrategy with 128 partitions
+# and temporal resolution of 5 weeks. This means that
+# it will try and group the data in units of 5 weeks.
+gps.SpaceTimePartitionStrategy(time_unit=gps.WEEKS, num_partitions=128, time_resolution=5)
 ```
