@@ -34,6 +34,6 @@ GeoPySpark is then the remedy to this predicament.
   - [Partition Strategies](guides/partition-strategy.md)
   - [Visualizing Layers](guides/visualization.md)
   - [Catalogs](guides/catalog.md)
-  - [TMS Services](guides/tms.md)
+  - [TMS Servers](guides/tms.md)
 - Tutorials
   - [Reading and Rasterizing OSM Data](tutorials/reading-and-rasterizing-osm-data.md)
