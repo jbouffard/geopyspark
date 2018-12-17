@@ -167,7 +167,7 @@ units of time that can be used to space apart data in the catalog.
 ### Saving a Pyramid
 
 For those that are unfamiliar with the `Pyramid` class, please see the
-[Pyramid section](vistualization.md#pyramid) section of the visualization
+[Pyramid section](visualization.md#pyramid) section of the visualization
 guide. Otherwise, please continue on.
 
 As of right now, there is no way to directly save a `Pyramid`.

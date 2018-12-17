@@ -1,4 +1,4 @@
-# PartitionStragies
+# Partition Strategies
 
 When working with distributed spatial data, one should
 take into consideration how the data within the cluster

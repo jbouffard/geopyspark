@@ -88,7 +88,7 @@ existing PySpark RDD.
 The first option is to create a `RasterLayer` from a PySpark `RDD`
 via the `from_numpy_rdd` class method.  This step can be a bit more involved,
 as it requires the data within the PySpark RDD to be formatted in a specific way
-(see [How is Data Stored and Represented in GeoPySpark](#how-is-data-stored-and-represented-in-geopyspark>)
+(see [How is Data Stored and Represented in GeoPySpark](layer.md#how-is-data-stored-and-represented-in-geopyspark)
 for more information).
 
 The following example constructs an `RDD` from a tuple. The first
@@ -281,7 +281,7 @@ little bit more arduous.
 
 The following example constructs an `RDD` from a tuple. The first
 element is a `SpatialKey` because we have decided to make the data
-spatial. See [How is Data Stored and Represented in GeoPySpark](how-is-data-stored-and-represented-in-geopyspark)
+spatial. See [How is Data Stored and Represented in GeoPySpark](layers.md#how-is-data-stored-and-represented-in-geopyspark)
 for more information.
 
 ```python3
@@ -1017,7 +1017,7 @@ different gradiant. By default, `color_map` is `None`. To learn more about
 
 ## RDD Methods
 
-As mentioned in the [How is Data Stored and Represented in GeoPySpark](#how-is-data-stored-and-represented-in-geopyspark>)
+As mentioned in the [How is Data Stored and Represented in GeoPySpark](layers.md#how-is-data-stored-and-represented-in-geopyspark)
 both `RasterLayer` and `TiledRasterLayer` have methods that allow them
 to work with their internal `RDD`s.
 
