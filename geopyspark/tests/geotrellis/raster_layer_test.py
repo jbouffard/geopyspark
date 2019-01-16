@@ -49,7 +49,6 @@ class RasterLayerTest(BaseTestClass):
 
         (projected_extent, tile) = collected
 
-        self.assertEqual(projected_extent.extent, self.extent)
         self.assertEqual(projected_extent.proj4, self.projected_extent.proj4)
 
         if multiplex:
@@ -89,7 +88,7 @@ class RasterLayerTest(BaseTestClass):
     def test_read_ordered_no_reproject_geotrellis(self):
         self.read_no_reproject(ReadMethod.GEOTRELLIS, multiplex=True)
 
-    @pytest.mark.skip(reason="Travis does not currently support GDAL")
+    #@pytest.mark.skip(reason="Travis does not currently support GDAL")
     def test_read_no_reproject_gdal(self):
         self.read_no_reproject(ReadMethod.GDAL)
 
@@ -101,7 +100,7 @@ class RasterLayerTest(BaseTestClass):
     def test_read_ordered_with_reproject_geotrellis(self):
         self.read_with_reproject(ReadMethod.GEOTRELLIS, multiplex=True)
 
-    @pytest.mark.skip(reason="Travis does not currently support GDAL")
+    #@pytest.mark.skip(reason="Travis does not currently support GDAL")
     def test_read_with_reproject_gdal(self):
         self.read_with_reproject(ReadMethod.GDAL)
 

@@ -58,7 +58,7 @@ class TiledRasterLayerTest(BaseTestClass):
     def test_read_ordered_no_reproject_local_geotrellis(self):
         self.read(LocalLayout(256, 256), ReadMethod.GEOTRELLIS, multiplex=True)
 
-    @pytest.mark.skip
+    #@pytest.mark.skip
     def test_read_no_reproject_local_gdal(self):
         self.read(LocalLayout(256, 256), ReadMethod.GDAL)
 
@@ -68,7 +68,7 @@ class TiledRasterLayerTest(BaseTestClass):
     def test_ordered_read_with_reproject_local_geotrellis(self):
         self.read(LocalLayout(128, 256), ReadMethod.GEOTRELLIS, target_crs=3857, multiplex=True)
 
-    @pytest.mark.skip
+    #@pytest.mark.skip
     def test_read_with_reproject_local_gdal(self):
         self.read(LocalLayout(128, 256), ReadMethod.GDAL, target_crs=3857)
 
@@ -80,7 +80,7 @@ class TiledRasterLayerTest(BaseTestClass):
     def test_ordered_read_no_reproject_global_geotrellis(self):
         self.read(GlobalLayout(tile_size=16, zoom=4), ReadMethod.GEOTRELLIS, multiplex=True)
 
-    @pytest.mark.skip
+    #@pytest.mark.skip
     def test_read_no_reproject_global_gdal(self):
         self.read(GlobalLayout(tile_size=128, zoom=4), ReadMethod.GDAL)
 
@@ -90,7 +90,7 @@ class TiledRasterLayerTest(BaseTestClass):
     def test_ordered_read_with_reproject_global_geotrellis(self):
         self.read(GlobalLayout(tile_size=128, zoom=4), ReadMethod.GEOTRELLIS, target_crs=3857, multiplex=True)
 
-    @pytest.mark.skip
+    #@pytest.mark.skip
     def test_read_with_reproject_global_gdal(self):
         self.read(GlobalLayout(tile_size=128, zoom=4), ReadMethod.GDAL, target_crs=3857)
 
