@@ -51,8 +51,8 @@ object RasterSource {
   ): ProjectedRasterLayer = {
     val rasterSourceRDD: RDD[RasterSource] =
       (readMethod match {
-        case GEOTRELLIS => rdd.map { new GeoTiffRasterSource(_): GeoTiffRasterSource }
-        case GDAL => rdd.map { GDALRasterSource(_): GDALRasterSource }
+        case GEOTRELLIS => rdd.map { GeoTiffRasterSource(_): RasterSource }
+        case GDAL => rdd.map { GDALRasterSource(_): RasterSource }
       }).cache()
 
     val reprojectedSourcesRDD: RDD[RasterSource] =
