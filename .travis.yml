@@ -1,10 +1,7 @@
 language: python
 
 python:
-  #- "3.3"
-  #- "3.4"
   - "3.5"
-  #- "3.6"
 
 branches:
   only:
@@ -44,4 +41,3 @@ deploy:
       repo: locationtech-labs/geopyspark
       branch: master
       tags: false
-      condition: "$TRAVIS_PYTHON_VERSION = 3.6"
