@@ -9,13 +9,8 @@ fi && \
 tar -xvf archives/spark-2.3.2-bin-hadoop2.7.tgz && \
 pip3 install -r requirements.txt && \
 pip3 install pyproj && \
-if [[ $TRAVIS_PYTHON_VERSION == "3.3" ]]; then
-  pip3 install pathlib;
-fi && \
-if [[ $TRAVIS_PYTHON_VERSION != "3.3" ]]; then
-  pip3 install matplotlib==2.0.0;
-  pip3 install pylint;
-fi && \
+pip3 install matplotlib==2.0.0 && \
+pip3 install pylint && \
 pip3 install colortools==0.1.2 && \
 pip3 install awscli && \
 export PATH=$PATH:$HOME/.local/bin && \
