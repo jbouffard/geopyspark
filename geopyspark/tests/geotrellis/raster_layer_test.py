@@ -46,7 +46,6 @@ class RasterLayerTest(BaseTestClass):
 
         (projected_extent, tile) = collected
 
-        #self.assertEqual(projected_extent.extent, self.extent)
         self.assertEqual(projected_extent.proj4, self.projected_extent.proj4)
 
         self.assertTrue((self.expected_tile == tile.cells).all())
@@ -61,8 +60,6 @@ class RasterLayerTest(BaseTestClass):
 
         actual_collected = actual_raster_layer.to_numpy_rdd().first()
         (actual_projected_extent, actual_tile) = actual_collected
-
-        #self.assertEqual(actual_projected_extent.epsg, expected_projected_extent.epsg)
 
         self.assertTrue((expected_tile.cells == actual_tile.cells).all())
 
