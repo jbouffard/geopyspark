@@ -10,4 +10,6 @@ docker run -it --net=host \
   -e TRAVIS_COMMIT=$TRAVIS_COMMIT \
   -e COURSIER_PROGRESS=false \
   -e COURSIER_NO_TERM=true \
+  -e PYSPARK_PYTHON=/usr/bin/python3.5 \
+  -e PYSPARK_DRIVER_PYTHON=/usr/bin/python3.5 \
   daunnc/openjdk-gdal:2.4.0 bash -c "cd /geopyspark && ./scripts/run_tests.sh"
